@@ -29,7 +29,7 @@ public:
     EspSmartThing(const std::shared_ptr<ILogger>& log,
                 const std::shared_ptr<IFlash>& flash,
                 const std::shared_ptr<INetwork>& net,
-                const std::shared_ptr<IHttpServer>& httpSrv,
+                const std::shared_ptr<IHttpSrv>& httpSrv,
                 const std::shared_ptr<IGpio>& gpio);
 
     /**
@@ -47,7 +47,7 @@ private:
     const std::shared_ptr<ILogger> _log;
     const std::shared_ptr<IFlash> _flash;
     const std::shared_ptr<INetwork> _net;
-    const std::shared_ptr<IHttpServer> _httpSrv;
+    const std::shared_ptr<IHttpSrv> _httpSrv;
     const std::shared_ptr<IGpio> _gpio;
 };
 

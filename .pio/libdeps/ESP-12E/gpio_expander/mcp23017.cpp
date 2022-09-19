@@ -60,6 +60,17 @@ bool mcp23017::begin(void) {
 		return false;
 	_gpioDirection = 0xFFFF;//all in
 	_gpioState = 0x0000;//all low 
+
+	Wire.beginTransmission(_adrs);
+	if (Wire.write(IOCON) == 0) {
+		Wire.endTransmission();
+		return false;
+	}
+	Wire.endTransmission();
+	if (Wire.requestFrom((uint8_t)_adrs,(uint8_t)2) == 0) {
+		return false;
+	}
+
 	return true;
 }
 

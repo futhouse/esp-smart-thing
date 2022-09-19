@@ -17,12 +17,13 @@
 
 #include <Arduino.h>
 
-String PROGMEM notFoundHtml = "\
-    <!DOCTYPE html> \
-    <html> \
-        <body> \
-            <center><h1>404 Not Found</h1></center> \
-        </body> \
+const PROGMEM char notFoundHtml[] = R"=====(
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <center><h1>404 Not Found</h1></center>
+        </body>
     </html>";
+    )=====";
 
 #endif /* __404_HTML_HPP__ */

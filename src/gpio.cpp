@@ -14,295 +14,345 @@
 
 #include "gpio.hpp"
 
-static uint8_t GpioAddrs[] = {
-    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27
+const GpioPinName IntPinsNames[] = {
+#ifdef ESP32
+    { "GPIO_1_TX0", GPIO_1_TX0 },
+    { "GPIO_2_D2_A2_2", GPIO_2_D2_A2_2 },
+    { "GPIO_3_RX0", GPIO_3_RX0 },
+    { "GPIO_4_D4_A2_0", GPIO_4_D4_A2_0 },
+    { "GPIO_5_D5_CS0", GPIO_5_D5_CS0 },
+    { "GPIO_12_D12_A2_5", GPIO_12_D12_A2_5 },
+    { "GPIO_13_D13_A2_4", GPIO_13_D13_A2_4 },
+    { "GPIO_14_D14_A2_6", GPIO_14_D14_A2_6 },
+    { "GPIO_15_D15_A2_3", GPIO_15_D15_A2_3 },
+    { "GPIO_16_RX2", GPIO_16_RX2 },
+    { "GPIO_17_TX2", GPIO_17_TX2 },
+    { "GPIO_18_D18_CLK", GPIO_18_D18_CLK },
+    { "GPIO_19_D19_MISO", GPIO_19_D19_MISO },
+    { "GPIO_21_D21_SDA", GPIO_21_D21_SDA },
+    { "GPIO_22_D22_SCL", GPIO_22_D22_SCL },
+    { "GPIO_23_D23_MOSI", GPIO_23_D23_MOSI },
+    { "GPIO_25_D25_A2_8", GPIO_25_D25_A2_8 },
+    { "GPIO_26_D26_A2_9", GPIO_26_D26_A2_9 },
+    { "GPIO_27_D27_A2_7", GPIO_27_D27_A2_7 },
+    { "GPIO_32_D32_A1_4", GPIO_32_D32_A1_4 },
+    { "GPIO_33_D33_A1_5", GPIO_33_D33_A1_5 },
+    { "GPIO_34_D34_A1_6", GPIO_34_D34_A1_6 },
+    { "GPIO_35_D35_A1_7", GPIO_35_D35_A1_7 },
+    { "GPIO_36_VP_A1_0", GPIO_36_VP_A1_0 },
+    { "GPIO_39_VN_A1_3", GPIO_39_VN_A1_3 },
+#elif defined(ESP8266)
+    { "GPIO_0_D3_FLASH", GPIO_0_D3_FLASH },
+    { "GPIO_2_D4", GPIO_2_D4 },
+    { "GPIO_3_RX", GPIO_3_RX },
+    { "GPIO_4_D2_SDA", GPIO_4_D2_SDA },
+    { "GPIO_5_D1_SCL", GPIO_5_D1_SCL },
+    { "GPIO_12_D6_MISO", GPIO_12_D6_MISO },
+    { "GPIO_13_D7_MOSI", GPIO_13_D7_MOSI }, 
+    { "GPIO_14_D5_SCLK", GPIO_14_D5_SCLK },
+    { "GPIO_15_D8_CS", GPIO_15_D8_CS },
+    { "GPIO_16_D0_WAKE", GPIO_16_D0_WAKE },
+    { "GPIO_ADC0_A0_ADC0", GPIO_ADC0_A0_ADC0 },
+#endif
 };
 
 Gpio::Gpio(const std::shared_ptr<ILogger> &log):
     _log(move(log))
 {
+    _ext[GPIO_ADDR_EXT_20].Addr = 0x20;
+    _ext[GPIO_ADDR_EXT_21].Addr = 0x21;
+    _ext[GPIO_ADDR_EXT_22].Addr = 0x22;
+    _ext[GPIO_ADDR_EXT_23].Addr = 0x23;
+    _ext[GPIO_ADDR_EXT_24].Addr = 0x24;
+    _ext[GPIO_ADDR_EXT_25].Addr = 0x25;
+    _ext[GPIO_ADDR_EXT_26].Addr = 0x26;
+    _ext[GPIO_ADDR_EXT_27].Addr = 0x27;
 }
 
 void Gpio::setup()
 {
-    bool extFound = false;
-
     _log->info("GPIO", "Init GPIO module");
 
-    for (uint8_t ext = 0; ext < GPIO_MAX_EXTENDERS; ext++)
+    for (uint8_t i = 0; i < GPIO_EXTENDERS_COUNT; i++)
     {
-        _ext8574[ext].postSetup(GpioAddrs[ext]);
-        if (_ext8574[ext].begin())
+        _ext8574[i].postSetup(_ext[i].Addr);
+        if (_ext8574[i].begin())
         {
-            extFound = true;
-            _states[ext].IsAlive = true;
-            _states[ext].Type = GPIO_PCF_8574;
-            _log->info("GPIO", "Extender PCF8574 found at address: " + String(GpioAddrs[ext]));
+            _extFound = true;
+            _ext[i].IsAlive = true;
+            _ext[i].Type = GPIO_PCF_8574;
+            _log->info("GPIO", "Extender PCF8574 found at address: " + String(_ext[i].Addr));
         }
 
-        _ext9555[ext].postSetup(GpioAddrs[ext]);
-        if (_ext9555[ext].begin())
+        _ext9555[i].postSetup(_ext[i].Addr);
+        if (_ext9555[i].begin())
         {
-            extFound = true;
-            _states[ext].IsAlive = true;
-            _states[ext].Type = GPIO_PCA_9555;
-            _log->info("GPIO", "Extender PCA9555 found at address: " + String(GpioAddrs[ext]));
+            _extFound = true;
+            _ext[i].IsAlive = true;
+            _ext[i].Type = GPIO_PCA_9555;
+            _log->info("GPIO", "Extender PCA9555 found at address: " + String(_ext[i].Addr));
         }
 
-        _ext23017[ext].postSetup(GpioAddrs[ext]);
-        if (_ext23017[ext].begin())
+        _ext23017[i].postSetup(_ext[i].Addr);
+        if (_ext23017[i].begin())
         {
-            extFound = true;
-            _states[ext].IsAlive = true;
-            _states[ext].Type = GPIO_MCP_23017;
-            _log->info("GPIO", "Extender MCP23017 found at address: " + String(GpioAddrs[ext]));
+            _extFound = true;
+            _ext[i].IsAlive = true;
+            _ext[i].Type = GPIO_MCP_23017;
+            _log->info("GPIO", "Extender MCP23017 found at address: " + String(_ext[i].Addr));
         }
     }
 
-    _states[GPIO_MAX_EXTENDERS].Type = GPIO_INTERNAL;
-
-    if (!extFound)
+    if (!_extFound)
+    {
+        _extFound = false;
         _log->info("GPIO", "No GPIO extenders found");
-}
-
-void Gpio::loadStates(const GpioConfigs *cfg, const size_t count)
-{
-    _log->info("GPIO", "Loading GPIO states from configs");
-    /**
-     * @brief Loading extenders states
-     * 
-     */
-    for (size_t ext = 0; ext < count; ext++)
-    {
-        if (!_states[ext].IsAlive)
-            continue;
-
-        _states[ext].Modes = cfg[ext].Modes;
-        _states[ext].States = cfg[ext].States;
-
-        if (_states[ext].Type == GPIO_PCF_8574)
-        {
-            for (uint8_t pin = 0; pin < GPIO_PINS_PER_PCF8574_EXTENDER; pin++)
-            {
-                /**
-                 * @brief Loading PCF8574 external GPIO modes
-                 * 
-                 */
-                if (GPIO_IS_BIT(_states[ext].Modes, pin))
-                {
-                    setPinMode(_states[ext].Type, GpioAddrs[ext], GPIO_OUTPUT, pin);
-                    _log->info("GPIO", "Type: PCF8574 Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " Mode: OUTPUT");
-                }
-                else
-                {
-                    setPinMode(_states[ext].Type, GpioAddrs[ext], GPIO_INPUT, pin);
-                    _log->info("GPIO", "Type: PCF8574 Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " Mode: INPUT");
-                }
-
-                /**
-                 * @brief Loading PCF8574 external GPIO states
-                 * 
-                 */
-                if (GPIO_IS_BIT(_states[ext].States, pin))
-                {
-                    setPinState(_states[ext].Type, GpioAddrs[ext], GPIO_HIGH, pin);
-                    _log->info("GPIO", "Type: PCF8574 Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " State: HIGH");
-                }
-                else
-                {
-                    setPinState(_states[ext].Type, GpioAddrs[ext], GPIO_LOW, pin);
-                    _log->info("GPIO", "Type: PCF8574 Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " State: LOW");
-                }
-            }
-        }
-        else
-        {
-            for (uint8_t pin = 0; pin < GPIO_PINS_PER_REGULAR_EXTENDER; pin++)
-            {
-                /**
-                 * @brief Loading regular external GPIO modes
-                 * 
-                 */
-                if (GPIO_IS_BIT(_states[ext].Modes, pin))
-                {
-                    setPinMode(_states[ext].Type, GpioAddrs[ext], GPIO_OUTPUT, pin);
-                    _log->info("GPIO", "Type: REGULAR_EXT Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " Mode: OUTPUT");
-                }
-                else
-                {
-                    setPinMode(_states[ext].Type, GpioAddrs[ext], GPIO_INPUT, pin);
-                    _log->info("GPIO", "Type: REGULAR_EXT Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " Mode: INPUT");
-                }
-
-                /**
-                 * @brief Loading regular external GPIO states
-                 * 
-                 */
-                if (GPIO_IS_BIT(_states[ext].States, pin))
-                {
-                    setPinState(_states[ext].Type, GpioAddrs[ext], GPIO_HIGH, pin);
-                    _log->info("GPIO", "Type: REGULAR_EXT Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " State: HIGH");
-                }
-                else
-                {
-                    setPinState(_states[ext].Type, GpioAddrs[ext], GPIO_LOW, pin);
-                    _log->info("GPIO", "Type: REGULAR_EXT Addr: " + String(GpioAddrs[ext]) + " Pin: " + String(pin) + " State: LOW");
-                }
-            }
-        }
-    }
-
-    /**
-     * @brief Loading onboard board GPIO states
-     * 
-     */
-    for (uint8_t pin = 0; pin < GPIO_PINS_PER_REGULAR_EXTENDER; pin++)
-    {
-        /**
-         * @brief Loading internal GPIO modes
-         * 
-         */
-        if (GPIO_IS_BIT(_states[GPIO_MAX_EXTENDERS].Modes, pin))
-        {
-            setPinMode(_states[GPIO_MAX_EXTENDERS].Type, 0, GPIO_OUTPUT, pin);
-            _log->info("GPIO", "Type: INTERNAL Addr: " + String(0) + " Pin: " + String(pin) + " Mode: OUTPUT");
-        }
-        else
-        {
-            setPinMode(_states[GPIO_MAX_EXTENDERS].Type, 0, GPIO_INPUT, pin);
-            _log->info("GPIO", "Type: INTERNAL Addr: " + String(0) + " Pin: " + String(pin) + " Mode: INPUT");
-        }
-
-        /**
-         * @brief Loading internal GPIO states
-         * 
-         */
-        if (GPIO_IS_BIT(_states[GPIO_MAX_EXTENDERS].States, pin))
-        {
-            setPinState(_states[GPIO_MAX_EXTENDERS].Type, 0, GPIO_HIGH, pin);
-            _log->info("GPIO", "Type: INTERNAL Addr: " + String(0) + " Pin: " + String(pin) + " State: LOW");
-        }
-        else
-        {
-            setPinState(_states[GPIO_MAX_EXTENDERS].Type, 0, GPIO_LOW, pin);
-            _log->info("GPIO", "Type: INTERNAL Addr: " + String(0) + " Pin: " + String(pin) + " State: LOW");
-        }
     }
 }
 
-void Gpio::getPinStates(GpioConfigs *cfg, const size_t count)
+void Gpio::setPinMode(const GpioPin &pin, const GpioMode mode)
 {
-    for (size_t i = 0; i < count; i++)
-    {
-        cfg[i].Modes = _states[i].Modes;
-        cfg[i].States = _states[i].States;
-    }
-}
-
-void Gpio::setPinMode(const GpioType gType, const uint8_t addr, const GpioMode mode, const uint8_t pin)
-{
-    if (gType == GPIO_INTERNAL)
+    if (pin.Type == GPIO_INTERNAL)
     {
         if (mode == GPIO_INPUT)
-            pinMode(pin, INPUT);
+            pinMode(pin.Pin, INPUT);
         else
-            pinMode(pin, OUTPUT);
+            pinMode(pin.Pin, OUTPUT);
     }
-    else if (gType == GPIO_MCP_23017)
+    else if (pin.Type == GPIO_MCP_23017)
     {
         if (mode == GPIO_INPUT)
-            _ext23017[addr].gpioPinMode(pin, INPUT);
+            _ext23017[pin.Addr].gpioPinMode(pin.Pin, INPUT);
         else
-            _ext23017[addr].gpioPinMode(pin, OUTPUT);
+            _ext23017[pin.Addr].gpioPinMode(pin.Pin, OUTPUT);
     }
-    else if (gType == GPIO_PCF_8574)
+    else if (pin.Type == GPIO_PCF_8574)
     {
         if (mode == GPIO_INPUT)
-            _ext8574[addr].gpioPinMode(pin, INPUT);
+            _ext8574[pin.Addr].gpioPinMode(pin.Pin, INPUT);
         else
-            _ext8574[addr].gpioPinMode(pin, OUTPUT);
+            _ext8574[pin.Addr].gpioPinMode(pin.Pin, OUTPUT);
     }
-    else if (gType == GPIO_PCA_9555)
+    else if (pin.Type == GPIO_PCA_9555)
     {
         if (mode == GPIO_INPUT)
-            _ext9555[addr].gpioPinMode(pin, INPUT);
+            _ext9555[pin.Addr].gpioPinMode(pin.Pin, INPUT);
         else
-            _ext9555[addr].gpioPinMode(pin, OUTPUT);
+            _ext9555[pin.Addr].gpioPinMode(pin.Pin, OUTPUT);
     }
-
-    if (mode == GPIO_INPUT)
-        GPIO_RESET_BIT(_states[addr].Modes, pin);
-    else
-        GPIO_SET_BIT(_states[addr].Modes, pin);
 }
 
-void Gpio::setPinState(const GpioType gType, const uint8_t addr, const GpioState state, const uint8_t pin)
+void Gpio::setPinState(const GpioPin &pin, const GpioState state)
 {
-    if (gType == GPIO_INTERNAL)
+    if (pin.Type == GPIO_INTERNAL)
     {
         if (state == GPIO_LOW)
-            digitalWrite(pin, LOW);
+            digitalWrite(pin.Pin, LOW);
         else
-            digitalWrite(pin, HIGH);
+            digitalWrite(pin.Pin, HIGH);
     }
-    else if (gType == GPIO_MCP_23017)
+    else if (pin.Type == GPIO_MCP_23017)
     {
         if (state == GPIO_LOW)
-            _ext23017[addr].gpioDigitalWrite(pin, LOW);
+            _ext23017[pin.Addr].gpioDigitalWrite(pin.Pin, LOW);
         else
-            _ext23017[addr].gpioDigitalWrite(pin, HIGH);
+            _ext23017[pin.Addr].gpioDigitalWrite(pin.Pin, HIGH);
     }
-    else if (gType == GPIO_PCF_8574)
+    else if (pin.Type == GPIO_PCF_8574)
     {
         if (state == GPIO_LOW)
-            _ext8574[addr].gpioDigitalWrite(pin, LOW);
+            _ext8574[pin.Addr].gpioDigitalWrite(pin.Pin, LOW);
         else
-            _ext8574[addr].gpioDigitalWrite(pin, HIGH);
+            _ext8574[pin.Addr].gpioDigitalWrite(pin.Pin, HIGH);
     }
-    else if (gType == GPIO_PCA_9555)
+    else if (pin.Type == GPIO_PCA_9555)
     {
         if (state == GPIO_LOW)
-            _ext9555[addr].gpioDigitalWrite(pin, LOW);
+            _ext9555[pin.Addr].gpioDigitalWrite(pin.Pin, LOW);
         else
-            _ext9555[addr].gpioDigitalWrite(pin, HIGH);
+            _ext9555[pin.Addr].gpioDigitalWrite(pin.Pin, HIGH);
     }
-
-    if (state == GPIO_LOW)
-        GPIO_RESET_BIT(_states[addr].States, pin);
-    else
-        GPIO_SET_BIT(_states[addr].States, pin);
 }
 
-GpioState Gpio::readPin(const GpioType gType, const uint8_t addr, const uint8_t pin)
+GpioState Gpio::readState(const GpioPin &pin)
 {
-    if (gType == GPIO_INTERNAL)
+    if (pin.Type == GPIO_INTERNAL)
     {
-        if (digitalRead(pin) == LOW)
+        if (digitalRead(pin.Pin) == LOW)
             return GPIO_LOW;
         else
             return GPIO_HIGH;
     }
-    else if (gType == GPIO_MCP_23017)
+    else if (pin.Type == GPIO_MCP_23017)
     {
-        if (_ext23017[addr].gpioDigitalRead(pin) == LOW)
+        if (_ext23017[pin.Addr].gpioDigitalRead(pin.Pin) == LOW)
             return GPIO_LOW;
         else
             return GPIO_HIGH;
     }
-    else if (gType == GPIO_PCF_8574)
+    else if (pin.Type == GPIO_PCF_8574)
     {
-        if (_ext8574[addr].gpioDigitalRead(pin) == LOW)
+        if (_ext8574[pin.Addr].gpioDigitalRead(pin.Pin) == LOW)
             return GPIO_LOW;
         else
             return GPIO_HIGH;
     }
-    else if (gType == GPIO_PCA_9555)
+    else if (pin.Type == GPIO_PCA_9555)
     {
-        if (_ext9555[addr].gpioDigitalRead(pin) == LOW)
+        if (_ext9555[pin.Addr].gpioDigitalRead(pin.Pin) == LOW)
             return GPIO_LOW;
         else
             return GPIO_HIGH;
     }
 
     return GPIO_LOW;
+}
+
+const GpioExtender *Gpio::getExtenders()
+{
+    if (_extFound)
+        return _ext;
+    else
+        return nullptr;
+}
+
+String Gpio::PinToStr(const GpioPin &pin)
+{
+    if (pin.Type == GPIO_INTERNAL)
+    {
+        for (uint8_t i = 0; i < GPIO_INTERNAL_COUNT; i++)
+        {
+            if (IntPinsNames[i].Pin == pin.Pin)
+                return IntPinsNames[i].Name;
+        }
+    } else {
+        for (uint8_t i = 0; i < GPIO_EXTENDERS_COUNT; i++)
+        {
+            if (pin.Type == GPIO_PCA_9555)
+            {
+                for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
+                {
+                    if ((pin.Addr == i) && (pin.Pin == j))
+                        return ("GPIO_PCA9555_" + String(_ext[i].Addr) + "_" + String(j));
+                }
+            } else if (pin.Type == GPIO_PCF_8574)
+            {
+                for (uint8_t j = 0; j < GPIO_PINS_PER_PCF8574_EXTENDER; j++)
+                {
+                    if ((pin.Addr == i) && (pin.Pin == j))
+                        return ("GPIO_PCF8574_" + String(_ext[i].Addr) + "_" + String(j));
+                }
+            } else if (pin.Type == GPIO_MCP_23017)
+            {
+                for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
+                {
+                    if ((pin.Addr == i) && (pin.Pin == j))
+                        return ("GPIO_MCP23017_" + String(_ext[i].Addr) + "_" + String(j));
+                }
+            }
+        }
+    }
+    return "Not Found";
+}
+
+void Gpio::StrToPin(const String &str, GpioPin &pin)
+{
+    for (uint8_t i = 0; i < GPIO_INTERNAL_COUNT; i++)
+    {
+        if (IntPinsNames[i].Name == str)
+        {
+            pin.Type = GPIO_INTERNAL;
+            pin.Pin = IntPinsNames[i].Pin;
+            return;
+        }
+    }
+
+    for (uint8_t i = 0; i < GPIO_EXTENDERS_COUNT; i++)
+    {
+        if (_ext[i].Type == GPIO_PCF_8574)
+        {
+            for (uint8_t j = 0; j < GPIO_PINS_PER_PCF8574_EXTENDER; j++)
+            {
+                if (str == ("GPIO_PCF8574_" + String(_ext[i].Addr) + "_" + String(j)))
+                {
+                    pin.Type = GPIO_PCF_8574;
+                    pin.Addr = i;
+                    pin.Pin = j;
+                    return;
+                }
+            }
+        }
+        else if (_ext[i].Type == GPIO_MCP_23017)
+        {
+            for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
+            {
+                if (str == ("GPIO_MCP23017_" + String(_ext[i].Addr) + "_" + String(j)))
+                {
+                    pin.Type = GPIO_MCP_23017;
+                    pin.Addr = i;
+                    pin.Pin = j;
+                    return;
+                }
+            }
+        }
+        else if (_ext[i].Type == GPIO_PCA_9555)
+        {
+            for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
+            {
+                if (str == ("GPIO_PCA9555_" + String(_ext[i].Addr) + "_" + String(j)))
+                {
+                    pin.Type = GPIO_PCA_9555;
+                    pin.Addr = i;
+                    pin.Pin = j;
+                    return;
+                }
+            }
+        }
+    }
+}
+
+void Gpio::getGpioNames(String &names)
+{
+    names = "";
+
+    for (uint8_t i = 0; i < GPIO_INTERNAL_COUNT; i++)
+    {
+        names += "\"" + IntPinsNames[i].Name + "\"";
+        if (i < GPIO_INTERNAL_COUNT - 1)
+            names += ",";
+    }
+
+    for (uint8_t i = 0; i < GPIO_EXTENDERS_COUNT; i++)
+    {
+        if (_ext[i].Type == GPIO_PCF_8574)
+        {
+            names += ",";
+            for (uint8_t j = 0; j < GPIO_PINS_PER_PCF8574_EXTENDER; j++)
+            {
+                names += "\"GPIO_PCF8574_" + String(_ext[i].Addr) + "_" + String(j);
+                if (j != GPIO_PINS_PER_PCF8574_EXTENDER - 1)
+                    names += "\",";
+            }
+        }
+        else if (_ext[i].Type == GPIO_MCP_23017)
+        {
+            names += ",";
+            for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
+            {
+                names += "\"GPIO_MCP23017_" + String(_ext[i].Addr) + "_" + String(j);
+                if (j != GPIO_PINS_PER_REGULAR_EXTENDER - 1)
+                    names += "\",";
+            }
+        }
+        else if (_ext[i].Type == GPIO_PCA_9555)
+        {
+            names += ",";
+            for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
+            {
+                names += "\"GPIO_PCA9555_" + String(_ext[i].Addr) + "_" + String(j);
+                if (j != GPIO_PINS_PER_REGULAR_EXTENDER - 1)
+                    names += "\",";
+            }
+        }
+    }
 }

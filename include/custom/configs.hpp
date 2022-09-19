@@ -21,31 +21,49 @@
  * Configuration defines
  */
 
+#define CONFIG_MAGIC    0xA4A2
+
 #define CONFIG_DEFAULT_SSID     "EspSmartThing"
-#define CONFIG_DEFAULT_PASSWD   ""
 
 #define CONFIG_WEB_SERVER_PORT  80
+#define CONFIG_DNS_SERVER_PORT  53
 
-#define CONFIG_GPIO_COUNT   9
+#define CONFIG_EXT_GPIO_COUNT   8
+
+#define CONFIG_STR_LEN  20
 
 /*
  * Personal configuration
  */
 
+typedef struct _PinConfig
+{
+    uint8_t Type;
+    uint8_t Addr;
+    uint8_t Pin;
+} PinConfig;
+
 typedef struct _NetConfig
 {
-    bool    IsConnectAP;
-    char    SSID[20];
-    char    Password[20];
-    uint8_t StatusLED;
-    bool    IsInverted;
+    bool        IsConnectAP;
+    char        SSID[CONFIG_STR_LEN];
+    char        Password[CONFIG_STR_LEN];
+    PinConfig   StatusLED;
+    bool        IsInverted;
+    bool        IsLedEnabled;
 } NetConfig;
 
-typedef struct _GpioConfigs
+typedef struct _ConfigGpioExt
 {
     uint16_t    Modes;
     uint16_t    States;
-} GpioConfigs;
+} ConfigGpioExt;
+
+typedef struct _ConfigGpioInt
+{
+    uint32_t    Modes;
+    uint32_t    States;
+} ConfigGpioInt;
 
 #ifdef SOCKET_MODULE
 typedef struct _SocketConfigs
@@ -65,13 +83,16 @@ typedef struct _SecureConfigs
 
 typedef struct _Configs
 {
-    NetConfig   NetCfg;
-    GpioConfigs GpioCfg[CONFIG_GPIO_COUNT];
+    uint16_t        Magic;
+    char            DevName[CONFIG_STR_LEN];
+    NetConfig       NetCfg;
+    ConfigGpioInt   GpioIntCfg;
+    ConfigGpioExt   GpioExtCfg[CONFIG_EXT_GPIO_COUNT];
 #ifdef SOCKET_MODULE
     SocketConfigs   SocketCfg;
 #endif
 #ifdef SECURE_MODULE
-    SecureConfigs SecureCfg;
+    SecureConfigs   SecureCfg;
 #endif
 } Configs;
 

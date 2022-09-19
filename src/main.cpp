@@ -12,20 +12,21 @@
  *
  *****************************************************************************/
 
-#include "est.hpp"
 #include "logger.hpp"
 #include "flash.hpp"
 #include "network.hpp"
-#include "httpsrv.hpp"
 #include "gpio.hpp"
+#include "httpsrv.hpp"
+#include "est.hpp"
 
 const auto logger = std::make_shared<Logger>();
 const auto flash = std::make_shared<Flash>();
-const auto network = std::make_shared<Network>();
+const auto dns = std::make_shared<DNSServer>();
 const auto gpio = std::make_shared<Gpio>(logger);
-const auto espServer = std::make_shared<ESP8266WebServer>(CONFIG_WEB_SERVER_PORT);
-const auto httpServer = std::make_shared<HttpServer>(espServer, network);
-const auto est = std::make_shared<EspSmartThing>(logger, flash, network, httpServer, gpio);
+const auto network = std::make_shared<Network>(dns, gpio);
+const auto asyncSrv = std::make_shared<AsyncWebServer>(CONFIG_WEB_SERVER_PORT);
+const auto server = std::make_shared<HttpSrv>(asyncSrv, network, logger, gpio, flash);
+const auto est = std::make_shared<EspSmartThing>(logger, flash, network, server, gpio);
 
 void setup()
 {

@@ -17,41 +17,77 @@
 
 #include <Arduino.h>
 
-String PROGMEM infoHtml = "\
-    <body> \
-        <center> \
-            <table border='1' cellpadding='4' cellspacing='0'> \
-                <tr align='center'> \
-                    <th colspan='2'><h2>Device Info</h2></th> \
-                </tr> \
-                <tr align='center'> \
-                    <td><h3>Param</h3></td> \
-                    <td><h3>Value</h3></td> \
-                </tr> \
-                <tr align='center'> \
-                    <td><a>Device Name</a></td> \
-                    <td><p id='devName'></p></td> \
-                </tr> \
-                <tr align='center'> \
-                    <td><a>IP address</a></td> \
-                    <td><p id='devIP'></p></td> \
-                </tr> \
-            </table> \
-        </center> \
-    </body>";
+const PROGMEM char infoHtml[] = R"=====(
+    <body>
+            <center>
+                <table border='0' cellpadding='4' cellspacing='0'>
+                    <tr align='center'>
+                        <td colspan='2' align='center'><font color='#800080'><h2>Device Name</h2></font></td>
+                    </tr>
+                    <tr align='center'>
+                        <td align='right'><a>Name:</a></td>
+                        <td align='left'><font color='blue'><input type='edit' id='EditName' /></font></td>
+                    </tr>
+                    <tr align='center'>
+                        <td colspan='2'>
+                            <div id='answ'></div>
+                            <form action=''>
+                                <br>
+                                <input type='button' value='Save Configs' onclick='SetNewName();' />
+                            </form>
+                        </td>
+                    </tr>
+                    <tr align='center'>
+                        <td colspan='2' align='center'><font color='#800080'><h2>Device Info</h2></font></td>
+                    </tr>
+                    <tr>
+                        <td align='right'><a>Device Name:</a></td>
+                        <td align='left'><b><font color="blue"><p id='devName'></p></font></b></td>
+                    </tr>
+                    <tr>
+                        <td align='right'><a>IP address:</a></td>
+                        <td align='left'><b><font color="blue"><p id='devIP'></p></font></b></td>
+                    </tr>
+                    <tr>
+                        <td align='right'><a>MAC address:</a></td>
+                        <td align='left'><b><font color="blue"><p id='devMAC'></p></font></b></td>
+                    </tr>
+                </table>
+            </center>
+        </body>
+        <script>
+            function UpdateFields() {
+                let devName = document.querySelector('#devName')
+                let edName = document.querySelector('#EditName')
+                let devIP = document.querySelector('#devIP')
+                let devMAC = document.querySelector('#devMAC')
 
-String PROGMEM infoScript = "\
-    <script> \
-        window.onload = function() { \
-            let devName = document.querySelector('#devName') \
-            let devIP = document.querySelector('#devIP') \
-            fetch('https://ipinfo.io/json').then(function(resp) { \
-                    return resp.json(); \
-                }).then(function(json) { \
-                    devName.innerHTML = '<a><font color=\"blue\">Confirmed</font></a>' \
-                    devIP.innerHTML = '<a><font color=\"blue\">'+json.ip+'</font></a>' \
-                }) \
-        }; \
-    </script>";
+                fetch('/info/index').then(function(resp) {
+                        return resp.json();
+                    }).then(function(json) {
+                        edName.value = json.name
+                        devName.innerHTML = '<a>' + json.name + '</a>'
+                        devIP.innerHTML = '<a>' + json.ip + '</a>'
+                        devMAC.innerHTML = '<a>' + json.mac + '</a>'
+                    })
+            }
+
+            window.onload = function() {
+                UpdateFields()
+            }
+
+            function SetNewName() {
+                let edName = document.querySelector('#EditName')
+
+                fetch('/conf/edname?' + new URLSearchParams({
+                        name: edName.value,
+                    })).then(function(resp) {
+                        return resp.json();
+                    }).then(function(json) {
+                        window.location.reload()
+                    })
+            }
+        </script>
+    )=====";
 
 #endif /* __INFO_HTML_HPP__ */

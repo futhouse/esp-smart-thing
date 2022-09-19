@@ -16,12 +16,16 @@
 #define __NETWORK_HPP__
 
 #include <Arduino.h>
+#include <DNSServer.h>
+#include <memory>
+
+#include "gpio.hpp"
 
 class INetwork
 {
 public:
-    virtual void setStatusLed(uint8_t gpio, bool inverted) = 0;
-    virtual void startAP(const String& ssid, const String& passwd) = 0;
+    virtual void setStatusLed(bool enabled, const GpioPin& pin, bool inverted) = 0;
+    virtual void startAP(const String& ssid) = 0;
     virtual void connectToAP(const String& ssid, const String& passwd) = 0;
     virtual void loop() = 0;
     virtual String getIP() = 0;
@@ -31,21 +35,24 @@ public:
 class Network: public INetwork
 {
 public:
+    Network(const std::shared_ptr<DNSServer>& dns,
+            const std::shared_ptr<IGpio>& gpio);
+
     /**
      * @brief Set Wi-Fi Status Led GPIO number
      * 
-     * @param gpio GPIO number
+     * @param enabled Status led enabled status
+     * @param pin GPIO number
      * @param inverted Inverted LED
      */
-    void setStatusLed(uint8_t gpio, bool inverted);
+    void setStatusLed(bool enabled, const GpioPin& pin, bool inverted);
 
     /**
      * @brief Start new AP
      * 
      * @param ssid SSID of AP
-     * @param passwd Password of AP
      */
-    void startAP(const String& ssid, const String& passwd);
+    void startAP(const String& ssid);
 
     /**
      * @brief Connecting to AP
@@ -76,8 +83,13 @@ public:
     String getMAC();
 
 private:
-    uint8_t _statusLed;
-    bool _inverted;
+    const std::shared_ptr<DNSServer> _dns;
+    const std::shared_ptr<IGpio> _gpio;
+
+    GpioPin _statusLed;
+    bool _inverted = false;
+    bool _ledEnabled = false;
+    bool _startAP = false;
 };
 
 #endif /* __NETWORK_HPP__ */

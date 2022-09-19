@@ -17,24 +17,32 @@
 
 #include <Arduino.h>
 
-String PROGMEM headerHtml = "\
-    <!DOCTYPE html> \
-    <html> \
-        <head> \
-            <center> \
-                <h1>ESP Smart House</h1> \
-                <table> \
-                    <tr> \
-                        <td><a href='/'>Info</a></td> \
-                    </tr> \
-                </table> \
-            </center> \
-        </head>";
+const PROGMEM char headerHtml[] = R"=====(
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <center>
+                <h1>ESP Smart Thing</h1>
+                <table>
+                    <tr>
+                        <td><a href='/'>Info</a></td>
+                        <td><a href='/wifi.html'>Wi-Fi</a></td>
+                    </tr>
+                </table>
+            </center>
+        </head>
+        <hr>
+        <style type="text/css">
+            * { font-family: arial; }
+        </style>
+        )=====";
 
-String PROGMEM footerHtml = "\
-        <footer> \
-            <center><h4>Denisov Foundation Limited (c) 2022</h4></center> \
-        </footer> \
-    </html>";
+const PROGMEM char footerHtml[] = R"=====(
+        <hr>
+        <footer>
+            <center><h4>Denisov Foundation Limited (c) 2022</h4></center>
+        </footer>
+    </html>
+    )=====";
 
 #endif /* __MISC_HTML_HPP__ */

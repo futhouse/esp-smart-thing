@@ -13,6 +13,7 @@
  *****************************************************************************/
 
 #include <ArduinoJson.h>
+#include <functional>
 
 #include "httpsrv.hpp"
 #include "html/404.hpp"
@@ -20,33 +21,34 @@
 #include "html/wifi.hpp"
 #include "html/info.hpp"
 
-HttpServer::HttpServer(const std::shared_ptr<ESP8266WebServer>& espServer,
-                        const std::shared_ptr<INetwork>& net):
-    _espServer(move(espServer)),
-    _net(move(net))
+HttpSrv::HttpSrv(const std::shared_ptr<AsyncWebServer>& asyncSrv,
+                        const std::shared_ptr<INetwork>& net,
+                        const std::shared_ptr<ILogger>& log,
+                        const std::shared_ptr<IGpio>& gpio,
+                        const std::shared_ptr<IFlash>& flash):
+    _asyncSrv(move(asyncSrv)),
+    _net(move(net)),
+    _log(move(log)),
+    _gpio(move(gpio)),
+    _flash(move(flash))
 {
 }
 
-void HttpServer::start(uint32_t port)
+void HttpSrv::setup()
 {
-    _espServer->begin(port);
-    _espServer->enableCORS(true);
+    _log->info("HTTP", "Starting WEB server");
+    _asyncSrv->begin();
 
-    _espServer->on("/mgmt/info", std::bind(&HttpServer::infoMgmtHandler, this));
+    _asyncSrv->on("/info/index", std::bind(&HttpSrv::infoConfHandler, this, std::placeholders::_1));
+    _asyncSrv->on("/info/gpio_names", std::bind(&HttpSrv::gpioNamesHandler, this, std::placeholders::_1));
+    _asyncSrv->on("/info/wifi", std::bind(&HttpSrv::wifiInfoHandler, this, std::placeholders::_1));
 
-    _espServer->onNotFound(std::bind(&HttpServer::notFoundHandler, this));
-    _espServer->on("/", std::bind(&HttpServer::infoHandler, this));
-    _espServer->on("/wifi", std::bind(&HttpServer::wifiHandler, this));
-}
+    _asyncSrv->on("/conf/edname", std::bind(&HttpSrv::edNameConfHandler, this, std::placeholders::_1));
+    _asyncSrv->on("/conf/wifi", std::bind(&HttpSrv::wifiConfHandler, this, std::placeholders::_1));
 
-void HttpServer::registerHandler(const String &path, std::function<void ()> handler)
-{
-    _espServer->on(path, handler);
-}
-
-void HttpServer::loop() 
-{
-    _espServer->handleClient();
+    _asyncSrv->onNotFound(std::bind(&HttpSrv::notFoundHandler, this, std::placeholders::_1));
+    _asyncSrv->on("/", std::bind(&HttpSrv::infoHandler, this, std::placeholders::_1));
+    _asyncSrv->on("/wifi.html", std::bind(&HttpSrv::wifiHandler, this, std::placeholders::_1));
 }
 
 /**
@@ -54,16 +56,97 @@ void HttpServer::loop()
  * 
  */
 
-void HttpServer::infoMgmtHandler()
+void HttpSrv::gpioNamesHandler(AsyncWebServerRequest *request)
+{
+    String names;
+
+    _gpio->getGpioNames(names);
+
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, "[" + names + "]"); 
+}
+
+void HttpSrv::infoConfHandler(AsyncWebServerRequest *request)
 {
     String out = "";
     DynamicJsonDocument doc(1024);
+    auto cfg = _flash->getConfigs();
 
+    doc["name"] = String(cfg->DevName);
     doc["ip"] = _net->getIP();
     doc["mac"] = _net->getMAC();
     serializeJson(doc, out);
 
-    _espServer->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::wifiInfoHandler(AsyncWebServerRequest *request)
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+    auto cfg = _flash->getConfigs();
+
+    doc["ssid"] = String(cfg->NetCfg.SSID);
+    doc["passwd"] = String(cfg->NetCfg.Password);
+    doc["ap"] = (!cfg->NetCfg.IsConnectAP) ? true : false;
+    doc["inverted"] = cfg->NetCfg.IsInverted;
+    doc["enabled"] = cfg->NetCfg.IsLedEnabled;
+
+    auto led = cfg->NetCfg.StatusLED;
+    auto ledPin = GpioPin
+    {
+        Type: static_cast<GpioType>(led.Type),
+        Addr: led.Addr,
+        Pin: led.Pin
+    };
+
+    doc["gpio"] = _gpio->PinToStr(ledPin);
+    serializeJson(doc, out);
+
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::wifiConfHandler(AsyncWebServerRequest *request)
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+    GpioPin ledPin;
+    auto cfg = _flash->getConfigs();
+
+    strncpy(cfg->NetCfg.SSID, request->arg("ssid").c_str(), 19);
+    strncpy(cfg->NetCfg.Password, request->arg("passwd").c_str(), 19);
+    if (request->arg("ap") == "true")
+        cfg->NetCfg.IsConnectAP = false;
+    else
+        cfg->NetCfg.IsConnectAP = true;
+    if (request->arg("inverted") == "true")
+        cfg->NetCfg.IsInverted = true;
+    else
+        cfg->NetCfg.IsInverted = false;
+    if (request->arg("enabled") == "true")
+        cfg->NetCfg.IsLedEnabled = true;
+    else
+        cfg->NetCfg.IsLedEnabled = false;
+
+    _gpio->StrToPin(request->arg("gpio"), ledPin);
+    cfg->NetCfg.StatusLED.Addr = ledPin.Addr;
+    cfg->NetCfg.StatusLED.Type = ledPin.Type;
+    cfg->NetCfg.StatusLED.Pin = ledPin.Pin;
+
+    _flash->saveData();
+
+    doc["result"] = true;
+    serializeJson(doc, out);
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::edNameConfHandler(AsyncWebServerRequest *request)
+{
+    auto cfg = _flash->getConfigs();
+    
+    strncpy(cfg->DevName, request->arg("name").c_str(), 19);
+    _flash->saveData();
+
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, ""); 
 }
 
 /**
@@ -71,17 +154,19 @@ void HttpServer::infoMgmtHandler()
  * 
  */
 
-void HttpServer::notFoundHandler()
+void HttpSrv::notFoundHandler(AsyncWebServerRequest *request)
 {
-    _espServer->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, notFoundHtml); 
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, notFoundHtml); 
 }
 
-void HttpServer::infoHandler()
+void HttpSrv::infoHandler(AsyncWebServerRequest *request)
 {
-    _espServer->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, headerHtml + infoHtml + infoScript + footerHtml);
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
+        String(headerHtml) + String(infoHtml) + String(footerHtml));
 }
 
-void HttpServer::wifiHandler()
+void HttpSrv::wifiHandler(AsyncWebServerRequest *request)
 {
-    _espServer->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, headerHtml + wifiHtml + wifiScript + footerHtml);
+    request->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
+        String(headerHtml) + String(wifiHtml) + String(footerHtml));
 }

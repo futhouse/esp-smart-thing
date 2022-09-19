@@ -23,8 +23,13 @@ void Flash::setup()
 
 void Flash::loadData()
 {
-    memset(&_cfg, 0x0, sizeof(Configs));
     EEPROM.get(0, _cfg);
+    if (_cfg.Magic != CONFIG_MAGIC)
+    {
+        memset(&_cfg, 0x0, sizeof(Configs));
+        strcpy(_cfg.DevName, CONFIG_DEFAULT_SSID);
+        _cfg.Magic = CONFIG_MAGIC;
+    }
 }
 
 bool Flash::saveData()

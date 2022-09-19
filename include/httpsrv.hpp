@@ -16,9 +16,20 @@
 #define __HTTP_SRV_HPP__
 
 #include <memory>
-#include <ESP8266WebServer.h>
+
+#ifdef ESP32
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+#endif
+#include <ESPAsyncWebServer.h>
 
 #include "network.hpp"
+#include "logger.hpp"
+#include "gpio.hpp"
+#include "flash.hpp"
 
 #define HTTP_CONTENT_HTML   "text/html"
 #define HTTP_CONTENT_JSON   "application/json"
@@ -29,50 +40,41 @@ typedef enum _HttpCodes
     HTTP_CODE_FORBIDDEN = 403
 } HttpCodes;
 
-class IHttpServer
+class IHttpSrv
 {
 public:
-    virtual void start(uint32_t port) = 0;
-    virtual void loop() = 0;
-    virtual void registerHandler(const String &path, std::function<void ()> handler) = 0;
-};
+    virtual void setup() = 0;};
 
-class HttpServer: public IHttpServer
+class HttpSrv: public IHttpSrv
 {
 public:
-    HttpServer(const std::shared_ptr<ESP8266WebServer>& espServer,
-                const std::shared_ptr<INetwork>& net);
+    HttpSrv(const std::shared_ptr<AsyncWebServer>& asyncSrv,
+            const std::shared_ptr<INetwork>& net,
+            const std::shared_ptr<ILogger>& log,
+            const std::shared_ptr<IGpio>& gpio,
+            const std::shared_ptr<IFlash>& flash);
 
     /**
      * @brief Init and start WEB server
      * 
-     * @param port Web server port
      */
-    void start(uint32_t port);
-
-    /**
-     * @brief Main Web Server cycle
-     * 
-     */
-    void loop();
-
-    /**
-     * @brief Add new HTTP handler to server
-     * 
-     * @param path Path to handler
-     * @param handler Handler function
-     */
-    void registerHandler(const String &path, std::function<void ()> handler);
+    void setup();
 
 private:
-    const std::shared_ptr<ESP8266WebServer> _espServer;
+    const std::shared_ptr<AsyncWebServer> _asyncSrv;
     const std::shared_ptr<INetwork> _net;
+    const std::shared_ptr<ILogger> _log;
+    const std::shared_ptr<IGpio> _gpio;
+    const std::shared_ptr<IFlash> _flash;
 
-    void infoMgmtHandler();
-
-    void notFoundHandler();
-    void infoHandler();
-    void wifiHandler();
+    void infoConfHandler(AsyncWebServerRequest *request);
+    void gpioNamesHandler(AsyncWebServerRequest *request);
+    void edNameConfHandler(AsyncWebServerRequest *request);
+    void wifiInfoHandler(AsyncWebServerRequest *request);
+    void notFoundHandler(AsyncWebServerRequest *request);
+    void infoHandler(AsyncWebServerRequest *request);
+    void wifiHandler(AsyncWebServerRequest *request);
+    void wifiConfHandler(AsyncWebServerRequest *request);
 };
 
 #endif /* __HTTP_SRV_HPP__ */

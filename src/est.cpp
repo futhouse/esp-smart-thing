@@ -17,7 +17,7 @@
 EspSmartThing::EspSmartThing(const std::shared_ptr<ILogger>& log,
                             const std::shared_ptr<IFlash>& flash,
                             const std::shared_ptr<INetwork>& net,
-                            const std::shared_ptr<IHttpServer>& httpSrv,
+                            const std::shared_ptr<IHttpSrv>& httpSrv,
                             const std::shared_ptr<IGpio>& gpio):
     _log(move(log)),
     _flash(move(flash)),
@@ -33,27 +33,45 @@ void EspSmartThing::startApp()
     _flash->setup();
     _flash->loadData();
 
-    /*
-     * Network configuration
+    auto cfg = _flash->getConfigs();
+
+    /**
+     * @brief GPIO configuration
+     * 
      */
 
-    auto netCfg = _flash->getConfigs()->NetCfg;
-    _net->setStatusLed(netCfg.StatusLED, netCfg.IsInverted);
-    if (netCfg.IsConnectAP)
+    _gpio->setup();
+
+    /**
+     * @brief Network configuration
+     * 
+     */
+
+    auto led = cfg->NetCfg.StatusLED;
+
+    const auto& gpioPin = GpioPin
     {
-        _log->info("EST", "Connecting to AP (SSID: " + String(netCfg.SSID) + ")");
-        _net->connectToAP(netCfg.SSID, netCfg.Password);
+        Type: static_cast<GpioType>(led.Type),
+        Addr: led.Addr,
+        Pin: led.Pin
+    };
+
+    _net->setStatusLed(cfg->NetCfg.IsLedEnabled, gpioPin, cfg->NetCfg.IsInverted);
+    if (cfg->NetCfg.IsConnectAP)
+    {
+        _log->info("EST", "Connecting to AP (SSID: " + String(cfg->NetCfg.SSID) + ")");
+        _net->connectToAP(cfg->NetCfg.SSID, cfg->NetCfg.Password);
     }
     else
     {
         _log->info("EST", "Starting new AP (SSID: " + String(CONFIG_DEFAULT_SSID) + ")");
-        _net->startAP(CONFIG_DEFAULT_SSID, CONFIG_DEFAULT_PASSWD);
+        _net->startAP(CONFIG_DEFAULT_SSID);
     }
 
-    _httpSrv->start(CONFIG_WEB_SERVER_PORT);
+    _httpSrv->setup();
 }
 
 void EspSmartThing::loop()
 {
-    _httpSrv->loop();
+    _net->loop();
 }

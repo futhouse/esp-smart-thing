@@ -12,28 +12,61 @@
  *
  *****************************************************************************/
 
-
+#ifdef ESP32
+#include <WiFi.h>
+#elif defined(ESP8266)
 #include <ESP8266WiFi.h>
+#endif
 
 #include "network.hpp"
+#include "custom/configs.hpp"
 
-void Network::setStatusLed(uint8_t gpio, bool inverted)
+Network::Network(const std::shared_ptr<DNSServer>& dns,
+                 const std::shared_ptr<IGpio>& gpio):
+    _dns(move(dns)),
+    _gpio(move(gpio))
 {
-    _statusLed = gpio;
-    _inverted = inverted;
-
-    pinMode(_statusLed, OUTPUT);
-
-    if (_inverted)
-        digitalWrite(_statusLed, HIGH);
-    else
-        digitalWrite(_statusLed, LOW);
 }
 
-void Network::startAP(const String& ssid, const String& passwd)
+void Network::setStatusLed(bool enabled, const GpioPin& pin, bool inverted)
 {
+    _statusLed = std::move(pin);
+    _inverted = inverted;
+    _ledEnabled = enabled;
+
+    _gpio->setPinMode(_statusLed, GPIO_OUTPUT);
+
+    if (_inverted)
+        _gpio->setPinState(_statusLed, GPIO_HIGH);
+    else
+        _gpio->setPinState(_statusLed, GPIO_LOW);
+}
+
+void Network::startAP(const String& ssid)
+{
+    _startAP = true;
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(ssid, passwd);
+    if (WiFi.softAP(ssid))
+    {
+        if (_ledEnabled)
+        {
+            if (_inverted)
+                _gpio->setPinState(_statusLed, GPIO_LOW);
+            else
+                _gpio->setPinState(_statusLed, GPIO_HIGH);
+        }
+    }
+    else
+    {
+        if (_ledEnabled)
+        {
+            if (_inverted)
+                _gpio->setPinState(_statusLed, GPIO_LOW);
+            else
+                _gpio->setPinState(_statusLed, GPIO_HIGH);
+        }
+    }
+    _dns->start(CONFIG_DNS_SERVER_PORT, "*", WiFi.softAPIP());
 }
 
 void Network::connectToAP(const String& ssid, const String& passwd)
@@ -44,25 +77,32 @@ void Network::connectToAP(const String& ssid, const String& passwd)
 
 void Network::loop()
 {
-    if (WiFi.status() == WL_CONNECTED)
+    _dns->processNextRequest();
+    if (!_startAP && _ledEnabled)
     {
-        if (_inverted)
-            digitalWrite(_statusLed, LOW);
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            if (_inverted)
+                _gpio->setPinState(_statusLed, GPIO_LOW);
+            else
+                _gpio->setPinState(_statusLed, GPIO_HIGH);
+        }
         else
-            digitalWrite(_statusLed, HIGH);
-    }
-    else
-    {
-        if (_inverted)
-            digitalWrite(_statusLed, HIGH);
-        else
-            digitalWrite(_statusLed, LOW);
+        {
+            if (_inverted)
+                _gpio->setPinState(_statusLed, GPIO_HIGH);
+            else
+                _gpio->setPinState(_statusLed, GPIO_LOW);
+        }
     }
 }
 
 String Network::getIP()
 {
-    return WiFi.localIP().toString();
+    if (_startAP)
+        return WiFi.softAPIP().toString();
+    else
+        return WiFi.localIP().toString();
 }
 
 String Network::getMAC()
