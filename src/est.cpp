@@ -15,15 +15,20 @@
 #include "est.hpp"
 
 EspSmartThing::EspSmartThing(const std::shared_ptr<ILogger>& log,
-                            const std::shared_ptr<IFlash>& flash,
-                            const std::shared_ptr<INetwork>& net,
-                            const std::shared_ptr<IHttpSrv>& httpSrv,
-                            const std::shared_ptr<IGpio>& gpio):
+                             const std::shared_ptr<IFlash>& flash,
+                             const std::shared_ptr<INetwork>& net,
+                             const std::shared_ptr<IHttpSrv>& httpSrv,
+                             const std::shared_ptr<IGpio>& gpio,
+                             const std::shared_ptr<ISms>& sms,
+                             const std::shared_ptr<ITelegram>& tg
+                            ):
     _log(move(log)),
     _flash(move(flash)),
     _net(move(net)),
     _httpSrv(move(httpSrv)),
-    _gpio(move(gpio))
+    _gpio(move(gpio)),
+    _sms(move(sms)),
+    _tg(move(tg))
 {
 }
 
@@ -47,7 +52,7 @@ void EspSmartThing::startApp()
      * 
      */
 
-    auto led = cfg->NetCfg.StatusLED;
+    const auto& led = cfg->NetCfg.StatusLED;
 
     const auto& gpioPin = GpioPin
     {
@@ -59,14 +64,25 @@ void EspSmartThing::startApp()
     _net->setStatusLed(cfg->NetCfg.IsLedEnabled, gpioPin, cfg->NetCfg.IsInverted);
     if (cfg->NetCfg.IsConnectAP)
     {
-        _log->info("EST", "Connecting to AP (SSID: " + String(cfg->NetCfg.SSID) + ")");
-        _net->connectToAP(cfg->NetCfg.SSID, cfg->NetCfg.Password);
+        _log->info("EST", "Connecting to AP: \"" + String(cfg->NetCfg.SSID) + "\"");
+        if (_net->connectToAP(cfg->NetCfg.SSID, cfg->NetCfg.Password)) {
+            _log->info("EST", "Connected successful. IP: " + _net->getIP());
+        } else {
+            _log->error("EST", "Failed to connect to AP.");
+        }
     }
     else
     {
-        _log->info("EST", "Starting new AP (SSID: " + String(CONFIG_DEFAULT_SSID) + ")");
+        _log->info("EST", "Starting new AP. SSID: \"" + String(CONFIG_DEFAULT_SSID) + "\"");
         _net->startAP(CONFIG_DEFAULT_SSID);
     }
+
+#ifdef SMS_NOTIFY_MOD
+    _sms->setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
+#endif
+#ifdef TELEGRAM_NOTIFY_MOD
+    _tg->setCreds(cfg->TelegramCfg.Token, cfg->TelegramCfg.ChatID);
+#endif
 
     _httpSrv->setup();
 }
@@ -74,4 +90,5 @@ void EspSmartThing::startApp()
 void EspSmartThing::loop()
 {
     _net->loop();
+    _httpSrv->loop();
 }

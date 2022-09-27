@@ -1,5 +1,5 @@
-SPI
-Wire
 bblanchon/ArduinoJson@^6.19.4
-me-no-dev/ESP Async WebServer@^1.2.3
+SPI
 sumotoy/gpio_expander@^0.8.3
+Wire
+plageoj/UrlEncode@^1.0.0

@@ -42,15 +42,15 @@ const PROGMEM char infoHtml[] = R"=====(
                     </tr>
                     <tr>
                         <td align='right'><a>Device Name:</a></td>
-                        <td align='left'><b><font color="blue"><p id='devName'></p></font></b></td>
+                        <td align='left'><b><font color="blue"><a id='devName'></a></font></b></td>
                     </tr>
                     <tr>
                         <td align='right'><a>IP address:</a></td>
-                        <td align='left'><b><font color="blue"><p id='devIP'></p></font></b></td>
+                        <td align='left'><b><font color="blue"><a id='devIP'></a></font></b></td>
                     </tr>
                     <tr>
                         <td align='right'><a>MAC address:</a></td>
-                        <td align='left'><b><font color="blue"><p id='devMAC'></p></font></b></td>
+                        <td align='left'><b><font color="blue"><a id='devMAC'></a></font></b></td>
                     </tr>
                 </table>
             </center>
@@ -66,9 +66,9 @@ const PROGMEM char infoHtml[] = R"=====(
                         return resp.json();
                     }).then(function(json) {
                         edName.value = json.name
-                        devName.innerHTML = '<a>' + json.name + '</a>'
-                        devIP.innerHTML = '<a>' + json.ip + '</a>'
-                        devMAC.innerHTML = '<a>' + json.mac + '</a>'
+                        devName.innerHTML = json.name
+                        devIP.innerHTML = json.ip
+                        devMAC.innerHTML = json.mac
                     })
             }
 

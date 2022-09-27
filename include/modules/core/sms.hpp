@@ -12,23 +12,37 @@
  *
  *****************************************************************************/
 
-#ifndef __MODULES_HPP__
-#define __MODULES_HPP__
+#ifndef __SMS_HPP__
+#define __SMS_HPP__
 
-/**
- * @brief Core Modules
- * 
- */
+#include "custom/modules.hpp"
 
-#define TELEGRAM_NOTIFY_MOD
-#define SMS_NOTIFY_MOD
+#include <Arduino.h>
 
-/**
- * @brief Functional modules
- * 
- */
+class ISms
+{
+#ifdef SMS_NOTIFY_MOD
 
-//#define SOCKET_MOD
-//#define SECURE_MOD
+public:
+    virtual void setCreds(const String &token, const String &phone) = 0;
+    virtual bool sendMsg(const String &msg) = 0;
 
-#endif /* __MODULES_HPP__ */
+#endif /* SMS_NOTIFY_MOD */
+};
+
+class Sms : public ISms
+{
+#ifdef SMS_NOTIFY_MOD
+
+public:
+    void setCreds(const String &token, const String &phone);
+    bool sendMsg(const String &msg);
+
+private:
+    String _phone;
+    String _token;
+
+#endif /* SMS_NOTIFY_MOD */
+};
+
+#endif /* __SMS_HPP__ */

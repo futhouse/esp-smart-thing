@@ -22,37 +22,37 @@
 #include <AsyncTCP.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
+#include <ESP8266WebServer.h>
 #endif
-#include <ESPAsyncWebServer.h>
 
 #include "network.hpp"
 #include "logger.hpp"
 #include "gpio.hpp"
 #include "flash.hpp"
 
+#include "modules/core/sms.hpp"
+#include "modules/core/telegram.hpp"
+
 #define HTTP_CONTENT_HTML   "text/html"
 #define HTTP_CONTENT_JSON   "application/json"
-
-typedef enum _HttpCodes
-{
-    HTTP_CODE_OK = 200,
-    HTTP_CODE_FORBIDDEN = 403
-} HttpCodes;
 
 class IHttpSrv
 {
 public:
-    virtual void setup() = 0;};
+    virtual void setup() = 0;
+    virtual void loop() = 0;
+};
 
 class HttpSrv: public IHttpSrv
 {
 public:
-    HttpSrv(const std::shared_ptr<AsyncWebServer>& asyncSrv,
+    HttpSrv(const std::shared_ptr<ESP8266WebServer>& syncSrv,
             const std::shared_ptr<INetwork>& net,
             const std::shared_ptr<ILogger>& log,
             const std::shared_ptr<IGpio>& gpio,
-            const std::shared_ptr<IFlash>& flash);
+            const std::shared_ptr<IFlash>& flash,
+            const std::shared_ptr<ISms>& sms,
+            const std::shared_ptr<ITelegram>& tg);
 
     /**
      * @brief Init and start WEB server
@@ -60,21 +60,42 @@ public:
      */
     void setup();
 
+    /**
+     * @brief Handle clients loop
+     * 
+     */
+    void loop();
+
 private:
-    const std::shared_ptr<AsyncWebServer> _asyncSrv;
+    const std::shared_ptr<ESP8266WebServer> _syncSrv;
     const std::shared_ptr<INetwork> _net;
     const std::shared_ptr<ILogger> _log;
     const std::shared_ptr<IGpio> _gpio;
     const std::shared_ptr<IFlash> _flash;
+    const std::shared_ptr<ISms> _sms;
+    const std::shared_ptr<ITelegram> _tg;
 
-    void infoConfHandler(AsyncWebServerRequest *request);
-    void gpioNamesHandler(AsyncWebServerRequest *request);
-    void edNameConfHandler(AsyncWebServerRequest *request);
-    void wifiInfoHandler(AsyncWebServerRequest *request);
-    void notFoundHandler(AsyncWebServerRequest *request);
-    void infoHandler(AsyncWebServerRequest *request);
-    void wifiHandler(AsyncWebServerRequest *request);
-    void wifiConfHandler(AsyncWebServerRequest *request);
+    void infoConfHandler();
+    void gpioNamesHandler();
+    void edNameConfHandler();
+    void wifiInfoHandler();
+    void notFoundHandler();
+    void infoHandler();
+    void wifiHandler();
+    void wifiConfHandler();
+    
+#ifdef SMS_NOTIFY_MOD
+    void smsInfoHandler();
+    void smsConfHandler();
+    void smsTestHandler();
+    void smsHtmlHandler();
+#endif
+#ifdef TELEGRAM_NOTIFY_MOD
+    void tgInfoHandler();
+    void tgConfHandler();
+    void tgTestHandler();
+    void tgHtmlHandler();
+#endif
 };
 
 #endif /* __HTTP_SRV_HPP__ */

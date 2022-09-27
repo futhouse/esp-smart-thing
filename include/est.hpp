@@ -23,14 +23,20 @@
 #include "httpsrv.hpp"
 #include "gpio.hpp"
 
+#include "modules/core/sms.hpp"
+#include "modules/core/telegram.hpp"
+
 class EspSmartThing
 {
 public:
     EspSmartThing(const std::shared_ptr<ILogger>& log,
-                const std::shared_ptr<IFlash>& flash,
-                const std::shared_ptr<INetwork>& net,
-                const std::shared_ptr<IHttpSrv>& httpSrv,
-                const std::shared_ptr<IGpio>& gpio);
+                  const std::shared_ptr<IFlash>& flash,
+                  const std::shared_ptr<INetwork>& net,
+                  const std::shared_ptr<IHttpSrv>& httpSrv,
+                  const std::shared_ptr<IGpio>& gpio,
+                  const std::shared_ptr<ISms>& sms,
+                  const std::shared_ptr<ITelegram>& tg
+                );
 
     /**
      * @brief Start application
@@ -49,6 +55,8 @@ private:
     const std::shared_ptr<INetwork> _net;
     const std::shared_ptr<IHttpSrv> _httpSrv;
     const std::shared_ptr<IGpio> _gpio;
+    const std::shared_ptr<ISms> _sms;
+    const std::shared_ptr<ITelegram> _tg;
 };
 
 #endif /* __ESP_SMART_THING_HPP__ */

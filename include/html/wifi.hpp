@@ -127,8 +127,9 @@ const PROGMEM char wifiHtml[] = R"=====(
                             break
                         }
                     }
+
+                    DisableElements()
                 })
-            DisableElements()
         };
 
         function DisableElements() {

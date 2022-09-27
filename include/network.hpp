@@ -21,12 +21,14 @@
 
 #include "gpio.hpp"
 
+#define NET_CONNECT_RETRIES 15
+
 class INetwork
 {
 public:
     virtual void setStatusLed(bool enabled, const GpioPin& pin, bool inverted) = 0;
     virtual void startAP(const String& ssid) = 0;
-    virtual void connectToAP(const String& ssid, const String& passwd) = 0;
+    virtual bool connectToAP(const String& ssid, const String& passwd) = 0;
     virtual void loop() = 0;
     virtual String getIP() = 0;
     virtual String getMAC() = 0;
@@ -60,7 +62,7 @@ public:
      * @param ssid SSID of AP
      * @param passwd Password of AP
      */
-    void connectToAP(const String& ssid, const String& passwd);
+    bool connectToAP(const String& ssid, const String& passwd);
 
     /**
      * @brief Wi-Fi loop

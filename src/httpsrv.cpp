@@ -14,6 +14,11 @@
 
 #include <ArduinoJson.h>
 #include <functional>
+#ifdef ESP32
+#include <HttpClient.h>
+#elif defined (ESP8266)
+#include <ESP8266HttpClient.h>
+#endif
 
 #include "httpsrv.hpp"
 #include "html/404.hpp"
@@ -21,34 +26,61 @@
 #include "html/wifi.hpp"
 #include "html/info.hpp"
 
-HttpSrv::HttpSrv(const std::shared_ptr<AsyncWebServer>& asyncSrv,
-                        const std::shared_ptr<INetwork>& net,
-                        const std::shared_ptr<ILogger>& log,
-                        const std::shared_ptr<IGpio>& gpio,
-                        const std::shared_ptr<IFlash>& flash):
-    _asyncSrv(move(asyncSrv)),
+#include "html/modules/core/sms.hpp"
+#include "html/modules/core/telegram.hpp"
+
+HttpSrv::HttpSrv(const std::shared_ptr<ESP8266WebServer>& syncSrv,
+                 const std::shared_ptr<INetwork>& net,
+                 const std::shared_ptr<ILogger>& log,
+                 const std::shared_ptr<IGpio>& gpio,
+                 const std::shared_ptr<IFlash>& flash,
+                 const std::shared_ptr<ISms>& sms,
+                 const std::shared_ptr<ITelegram>& tg
+                ):
+    _syncSrv(move(syncSrv)),
     _net(move(net)),
     _log(move(log)),
     _gpio(move(gpio)),
-    _flash(move(flash))
+    _flash(move(flash)),
+    _sms(move(sms)),
+    _tg(move(tg))
 {
 }
 
 void HttpSrv::setup()
 {
     _log->info("HTTP", "Starting WEB server");
-    _asyncSrv->begin();
 
-    _asyncSrv->on("/info/index", std::bind(&HttpSrv::infoConfHandler, this, std::placeholders::_1));
-    _asyncSrv->on("/info/gpio_names", std::bind(&HttpSrv::gpioNamesHandler, this, std::placeholders::_1));
-    _asyncSrv->on("/info/wifi", std::bind(&HttpSrv::wifiInfoHandler, this, std::placeholders::_1));
+    _syncSrv->on("/info/index", std::bind(&HttpSrv::infoConfHandler, this));
+    _syncSrv->on("/info/gpio_names", std::bind(&HttpSrv::gpioNamesHandler, this));
+    _syncSrv->on("/info/wifi", std::bind(&HttpSrv::wifiInfoHandler, this));
+    _syncSrv->on("/conf/wifi", std::bind(&HttpSrv::wifiConfHandler, this));
+    _syncSrv->on("/conf/edname", std::bind(&HttpSrv::edNameConfHandler, this));
 
-    _asyncSrv->on("/conf/edname", std::bind(&HttpSrv::edNameConfHandler, this, std::placeholders::_1));
-    _asyncSrv->on("/conf/wifi", std::bind(&HttpSrv::wifiConfHandler, this, std::placeholders::_1));
+#ifdef SMS_NOTIFY_MOD
+    _syncSrv->on("/info/sms", std::bind(&HttpSrv::smsInfoHandler, this));
+    _syncSrv->on("/conf/sms", std::bind(&HttpSrv::smsConfHandler, this));
+    _syncSrv->on("/test/sms", std::bind(&HttpSrv::smsTestHandler, this));
+    _syncSrv->on("/sms.html", std::bind(&HttpSrv::smsHtmlHandler, this));
+#endif
 
-    _asyncSrv->onNotFound(std::bind(&HttpSrv::notFoundHandler, this, std::placeholders::_1));
-    _asyncSrv->on("/", std::bind(&HttpSrv::infoHandler, this, std::placeholders::_1));
-    _asyncSrv->on("/wifi.html", std::bind(&HttpSrv::wifiHandler, this, std::placeholders::_1));
+#ifdef TELEGRAM_NOTIFY_MOD
+    _syncSrv->on("/info/telegram", std::bind(&HttpSrv::tgInfoHandler, this));
+    _syncSrv->on("/conf/telegram", std::bind(&HttpSrv::tgConfHandler, this));
+    _syncSrv->on("/test/telegram", std::bind(&HttpSrv::tgTestHandler, this));
+    _syncSrv->on("/telegram.html", std::bind(&HttpSrv::tgHtmlHandler, this));
+#endif
+
+    _syncSrv->onNotFound(std::bind(&HttpSrv::notFoundHandler, this));
+    _syncSrv->on("/", std::bind(&HttpSrv::infoHandler, this));
+    _syncSrv->on("/wifi.html", std::bind(&HttpSrv::wifiHandler, this));
+
+    _syncSrv->begin();
+}
+
+void HttpSrv::loop()
+{
+    _syncSrv->handleClient();
 }
 
 /**
@@ -56,16 +88,16 @@ void HttpSrv::setup()
  * 
  */
 
-void HttpSrv::gpioNamesHandler(AsyncWebServerRequest *request)
+void HttpSrv::gpioNamesHandler()
 {
     String names;
 
     _gpio->getGpioNames(names);
 
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, "[" + names + "]"); 
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, "[" + names + "]"); 
 }
 
-void HttpSrv::infoConfHandler(AsyncWebServerRequest *request)
+void HttpSrv::infoConfHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
@@ -76,10 +108,10 @@ void HttpSrv::infoConfHandler(AsyncWebServerRequest *request)
     doc["mac"] = _net->getMAC();
     serializeJson(doc, out);
 
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }
 
-void HttpSrv::wifiInfoHandler(AsyncWebServerRequest *request)
+void HttpSrv::wifiInfoHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
@@ -102,51 +134,59 @@ void HttpSrv::wifiInfoHandler(AsyncWebServerRequest *request)
     doc["gpio"] = _gpio->PinToStr(ledPin);
     serializeJson(doc, out);
 
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }
 
-void HttpSrv::wifiConfHandler(AsyncWebServerRequest *request)
+void HttpSrv::wifiConfHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
     GpioPin ledPin;
     auto cfg = _flash->getConfigs();
 
-    strncpy(cfg->NetCfg.SSID, request->arg("ssid").c_str(), 19);
-    strncpy(cfg->NetCfg.Password, request->arg("passwd").c_str(), 19);
-    if (request->arg("ap") == "true")
+    strncpy(cfg->NetCfg.SSID, _syncSrv->arg("ssid").c_str(), 19);
+    strncpy(cfg->NetCfg.Password, _syncSrv->arg("passwd").c_str(), 19);
+    if (_syncSrv->arg("ap") == "true")
         cfg->NetCfg.IsConnectAP = false;
     else
         cfg->NetCfg.IsConnectAP = true;
-    if (request->arg("inverted") == "true")
+    if (_syncSrv->arg("inverted") == "true")
         cfg->NetCfg.IsInverted = true;
     else
         cfg->NetCfg.IsInverted = false;
-    if (request->arg("enabled") == "true")
+    if (_syncSrv->arg("enabled") == "true")
         cfg->NetCfg.IsLedEnabled = true;
     else
         cfg->NetCfg.IsLedEnabled = false;
 
-    _gpio->StrToPin(request->arg("gpio"), ledPin);
+    _gpio->StrToPin(_syncSrv->arg("gpio"), ledPin);
     cfg->NetCfg.StatusLED.Addr = ledPin.Addr;
     cfg->NetCfg.StatusLED.Type = ledPin.Type;
     cfg->NetCfg.StatusLED.Pin = ledPin.Pin;
 
-    _flash->saveData();
+    if (_flash->saveData())
+        doc["result"] = true;
+    else
+        doc["result"] = false;
 
-    doc["result"] = true;
     serializeJson(doc, out);
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }
 
-void HttpSrv::edNameConfHandler(AsyncWebServerRequest *request)
+void HttpSrv::edNameConfHandler()
 {
+    String out = "";
+    DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
     
-    strncpy(cfg->DevName, request->arg("name").c_str(), 19);
-    _flash->saveData();
+    strncpy(cfg->DevName, _syncSrv->arg("name").c_str(), 19);
 
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, ""); 
+    if (_flash->saveData())
+        doc["result"] = true;
+    else
+        doc["result"] = false;
+
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }
 
 /**
@@ -154,19 +194,131 @@ void HttpSrv::edNameConfHandler(AsyncWebServerRequest *request)
  * 
  */
 
-void HttpSrv::notFoundHandler(AsyncWebServerRequest *request)
+void HttpSrv::notFoundHandler()
 {
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, notFoundHtml); 
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, notFoundHtml); 
 }
 
-void HttpSrv::infoHandler(AsyncWebServerRequest *request)
+void HttpSrv::infoHandler()
 {
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
         String(headerHtml) + String(infoHtml) + String(footerHtml));
 }
 
-void HttpSrv::wifiHandler(AsyncWebServerRequest *request)
+void HttpSrv::wifiHandler()
 {
-    request->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
         String(headerHtml) + String(wifiHtml) + String(footerHtml));
 }
+
+/**
+ * @brief Modules Handlers
+ * 
+ */
+
+#ifdef SMS_NOTIFY_MOD
+void HttpSrv::smsInfoHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+    auto cfg = _flash->getConfigs();
+
+    doc["token"] = String(cfg->SmsCfg.Token);
+    doc["phone"] = String(cfg->SmsCfg.Phone);
+
+    serializeJson(doc, out);
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::smsConfHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+    auto cfg = _flash->getConfigs();
+
+    strncpy(cfg->SmsCfg.Token, _syncSrv->arg("token").c_str(), 38);
+    strncpy(cfg->SmsCfg.Phone, _syncSrv->arg("phone").c_str(), 13);
+    _sms->setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
+
+    if (_flash->saveData())
+        doc["result"] = true;
+    else
+        doc["result"] = false;
+
+    serializeJson(doc, out);
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::smsTestHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+
+    if (_sms->sendMsg("Test notify!"))
+        doc["result"] = true;
+    else
+        doc["result"] = false;
+
+    serializeJson(doc, out);
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::smsHtmlHandler()
+{
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
+        String(headerHtml) + String(smsHtml) + String(footerHtml));
+}
+#endif
+#ifdef TELEGRAM_NOTIFY_MOD
+void HttpSrv::tgInfoHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+    auto cfg = _flash->getConfigs();
+
+    doc["token"] = String(cfg->TelegramCfg.Token);
+    doc["chat_id"] = String(cfg->TelegramCfg.ChatID);
+
+    serializeJson(doc, out);
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::tgConfHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+    auto cfg = _flash->getConfigs();
+
+    strncpy(cfg->TelegramCfg.Token, _syncSrv->arg("token").c_str(), 47);
+    strncpy(cfg->TelegramCfg.ChatID, _syncSrv->arg("chat_id").c_str(), 10);
+    _tg->setCreds(cfg->TelegramCfg.Token, cfg->TelegramCfg.ChatID);
+
+    if (_flash->saveData())
+        doc["result"] = true;
+    else
+        doc["result"] = false;
+
+    serializeJson(doc, out);
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::tgTestHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+
+    if (_tg->sendMsg("Test notify!"))
+        doc["result"] = true;
+    else
+        doc["result"] = false;
+
+    serializeJson(doc, out);
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void HttpSrv::tgHtmlHandler()
+{
+    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_HTML,
+        String(headerHtml) + String(tgHtml) + String(footerHtml));
+}
+#endif

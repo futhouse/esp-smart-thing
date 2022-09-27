@@ -34,12 +34,15 @@ void Network::setStatusLed(bool enabled, const GpioPin& pin, bool inverted)
     _inverted = inverted;
     _ledEnabled = enabled;
 
-    _gpio->setPinMode(_statusLed, GPIO_OUTPUT);
+    if (_ledEnabled)
+    {
+        _gpio->setPinMode(_statusLed, GPIO_OUTPUT);
 
-    if (_inverted)
-        _gpio->setPinState(_statusLed, GPIO_HIGH);
-    else
-        _gpio->setPinState(_statusLed, GPIO_LOW);
+        if (_inverted)
+            _gpio->setPinState(_statusLed, GPIO_HIGH);
+        else
+            _gpio->setPinState(_statusLed, GPIO_LOW);
+    }
 }
 
 void Network::startAP(const String& ssid)
@@ -69,15 +72,25 @@ void Network::startAP(const String& ssid)
     _dns->start(CONFIG_DNS_SERVER_PORT, "*", WiFi.softAPIP());
 }
 
-void Network::connectToAP(const String& ssid, const String& passwd)
+bool Network::connectToAP(const String& ssid, const String& passwd)
 {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, passwd);
+
+    for (uint8_t i = 0; i < NET_CONNECT_RETRIES; i++) {
+        delay(1000);
+        if (WiFi.status() == WL_CONNECTED)
+            return true;
+    }
+
+    return false;
 }
 
 void Network::loop()
 {
-    _dns->processNextRequest();
+    if (_startAP)
+        _dns->processNextRequest();
+
     if (!_startAP && _ledEnabled)
     {
         if (WiFi.status() == WL_CONNECTED)

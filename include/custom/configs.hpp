@@ -53,25 +53,29 @@ typedef struct _NetConfig
     bool        IsLedEnabled;
 } NetConfig;
 
-typedef struct _ConfigGpioExt
+#ifdef TELEGRAM_NOTIFY_MOD
+typedef struct _TelegramConfigs
 {
-    uint16_t    Modes;
-    uint16_t    States;
-} ConfigGpioExt;
+    char Token[47];
+    char ChatID[10];
+} TelegramConfigs;
+#endif
 
-typedef struct _ConfigGpioInt
+#ifdef SMS_NOTIFY_MOD
+typedef struct _SmsConfigs
 {
-    uint32_t    Modes;
-    uint32_t    States;
-} ConfigGpioInt;
+    char Token[38];
+    char Phone[13];
+} SmsConfigs;
+#endif
 
-#ifdef SOCKET_MODULE
+#ifdef SOCKET_MOD
 typedef struct _SocketConfigs
 {
 } SocketConfigs;
 #endif
 
-#ifdef SECURE_MODULE
+#ifdef SECURE_MOD
 typedef struct _SecureConfigs
 {
 } SecureConfigs;
@@ -86,12 +90,16 @@ typedef struct _Configs
     uint16_t        Magic;
     char            DevName[CONFIG_STR_LEN];
     NetConfig       NetCfg;
-    ConfigGpioInt   GpioIntCfg;
-    ConfigGpioExt   GpioExtCfg[CONFIG_EXT_GPIO_COUNT];
-#ifdef SOCKET_MODULE
+#ifdef TELEGRAM_NOTIFY_MOD
+    TelegramConfigs TelegramCfg;
+#endif
+#ifdef SMS_NOTIFY_MOD
+    SmsConfigs      SmsCfg;
+#endif
+#ifdef SOCKET_MOD
     SocketConfigs   SocketCfg;
 #endif
-#ifdef SECURE_MODULE
+#ifdef SECURE_MOD
     SecureConfigs   SecureCfg;
 #endif
 } Configs;
