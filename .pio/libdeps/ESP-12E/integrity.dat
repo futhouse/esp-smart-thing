@@ -1,5 +1,7 @@
-bblanchon/ArduinoJson@^6.19.4
-SPI
 sumotoy/gpio_expander@^0.8.3
-Wire
 plageoj/UrlEncode@^1.0.0
+Wire
+OneWire
+SPI
+sstaub/Ticker@^4.4.0
+bblanchon/ArduinoJson@^6.19.4

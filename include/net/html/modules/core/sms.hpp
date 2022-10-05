@@ -57,7 +57,7 @@ const PROGMEM char smsHtml[] = R"=====(
             let edToken = document.querySelector('#token')
             let edPhone = document.querySelector('#phone')
 
-            fetch('/info/sms').then(function(resp) {
+            fetch('/api/v1/sms/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     edToken.value = json.token
@@ -66,7 +66,7 @@ const PROGMEM char smsHtml[] = R"=====(
         };
 
         function TestNotify() {
-            fetch('/test/sms').then(function(resp) {
+            fetch('/api/v1/sms/test').then(function(resp) {
                 return resp.json();
             }).then(function(json) {
                 if (json.result)
@@ -85,7 +85,7 @@ const PROGMEM char smsHtml[] = R"=====(
                 return
             }
 
-            fetch('/conf/sms?'+ new URLSearchParams({
+            fetch('/api/v1/sms/conf?'+ new URLSearchParams({
                         token: edToken.value,
                         phone: edPhone.value,
                     })).then(function(resp) {

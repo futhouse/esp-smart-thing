@@ -216,7 +216,7 @@ const GpioExtender *Gpio::getExtenders()
         return nullptr;
 }
 
-String Gpio::PinToStr(const GpioPin &pin)
+String Gpio::pinToStr(const GpioPin &pin)
 {
     if (pin.Type == GPIO_INTERNAL)
     {
@@ -255,15 +255,17 @@ String Gpio::PinToStr(const GpioPin &pin)
     return "Not Found";
 }
 
-void Gpio::StrToPin(const String &str, GpioPin &pin)
+GpioPin Gpio::strToPin(const String &str)
 {
+    GpioPin pin;
+
     for (uint8_t i = 0; i < GPIO_INTERNAL_COUNT; i++)
     {
         if (IntPinsNames[i].Name == str)
         {
             pin.Type = GPIO_INTERNAL;
             pin.Pin = IntPinsNames[i].Pin;
-            return;
+            return pin;
         }
     }
 
@@ -278,7 +280,7 @@ void Gpio::StrToPin(const String &str, GpioPin &pin)
                     pin.Type = GPIO_PCF_8574;
                     pin.Addr = i;
                     pin.Pin = j;
-                    return;
+                    return pin;
                 }
             }
         }
@@ -291,7 +293,7 @@ void Gpio::StrToPin(const String &str, GpioPin &pin)
                     pin.Type = GPIO_MCP_23017;
                     pin.Addr = i;
                     pin.Pin = j;
-                    return;
+                    return pin;
                 }
             }
         }
@@ -304,11 +306,13 @@ void Gpio::StrToPin(const String &str, GpioPin &pin)
                     pin.Type = GPIO_PCA_9555;
                     pin.Addr = i;
                     pin.Pin = j;
-                    return;
+                    return pin;
                 }
             }
         }
     }
+
+    return pin;
 }
 
 void Gpio::getGpioNames(String &names)

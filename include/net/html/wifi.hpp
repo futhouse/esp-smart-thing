@@ -94,7 +94,7 @@ const PROGMEM char wifiHtml[] = R"=====(
             let enabledLed = document.querySelector('#EnabledLed')
             let invertedLed = document.querySelector('#InvertedLed')
 
-            fetch('/info/gpio_names').then(function(resp) {
+            fetch('/api/v1/gpio/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     for (let i = 0; i < json.length; i++) {
@@ -105,7 +105,7 @@ const PROGMEM char wifiHtml[] = R"=====(
                     }
                 })
 
-            fetch('/info/wifi').then(function(resp) {
+            fetch('/api/v1/wifi/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     ssid.value = json.ssid
@@ -123,7 +123,7 @@ const PROGMEM char wifiHtml[] = R"=====(
                     for (let i = 0; i < statusLed.children.length; i++) {
                         let item = statusLed.children[i]
                         if (item.value == json.gpio) {
-                            item.selected="selected"
+                            item.selected = true
                             break
                         }
                     }
@@ -178,7 +178,7 @@ const PROGMEM char wifiHtml[] = R"=====(
                 }
             }
 
-            fetch('/conf/wifi?'+ new URLSearchParams({
+            fetch('/api/v1/wifi/conf?'+ new URLSearchParams({
                         ssid: edSsid.value,
                         passwd: edPasswd.value,
                         ap: master.checked,

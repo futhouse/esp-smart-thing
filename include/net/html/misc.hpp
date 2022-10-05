@@ -22,6 +22,7 @@
 const PROGMEM char headerHtml[] = R"=====(
     <!DOCTYPE html>
     <html>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <head>
             <center>
                 <h1>ESP Smart Thing</h1>
@@ -38,6 +39,11 @@ const PROGMEM char headerHtml[] = R"=====(
 #ifdef TELEGRAM_NOTIFY_MOD
     R"=====(
                         <td><a href='/telegram.html'>Telegram</a></td>
+    )====="
+#endif
+#ifdef SECURE_MOD
+    R"=====(
+                        <td><a href='/secure.html'>Secure</a></td>
     )====="
 #endif
     R"=====(
