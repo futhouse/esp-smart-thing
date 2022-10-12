@@ -25,7 +25,6 @@
 
 #define CONFIG_DEFAULT_SSID     "EspSmartThing"
 
-#define CONFIG_WEB_SERVER_PORT  80
 #define CONFIG_DNS_SERVER_PORT  53
 
 #define CONFIG_EXT_GPIO_COUNT   8
@@ -35,6 +34,12 @@
 /*
  * Personal configuration
  */
+
+typedef struct _RemoteDev
+{
+    char IP[16];
+    bool Enabled;
+} RemoteDev;
 
 typedef struct _PinConfig
 {
@@ -76,8 +81,29 @@ typedef struct _SocketConfigs
 #endif
 
 #ifdef SECURE_MOD
+typedef struct _SecureSensorConfig
+{
+    char        Name[10];
+    uint8_t     Type;
+    bool        Enabled;
+    bool        Telegram;
+    bool        Sms;
+    bool        Alarm;
+    PinConfig   Pin;
+} SecureSensorConfig;
+
 typedef struct _SecureConfigs
 {
+    bool                Armed;
+    bool                Alarm;
+    bool                InvertedAlarm;
+    PinConfig           AlarmPin;
+    PinConfig           KeyPin;
+    PinConfig           LedPin;
+    SecureSensorConfig  Sensors[10];
+    char                Keys[5][17];
+    bool                Master;
+    RemoteDev           Remote[5];
 } SecureConfigs;
 #endif
 

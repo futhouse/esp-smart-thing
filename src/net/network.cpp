@@ -18,7 +18,7 @@
 #include <ESP8266WiFi.h>
 #endif
 
-#include "network.hpp"
+#include "net/network.hpp"
 #include "custom/configs.hpp"
 
 Network::Network(const std::shared_ptr<DNSServer>& dns,

@@ -19,7 +19,7 @@
 
 #include "custom/configs.hpp"
 
-#define FLASH_SIZE  512
+#define FLASH_SIZE  1024
 
 class IFlash
 {

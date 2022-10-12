@@ -54,4 +54,14 @@ bool Sms::sendMsg(const String &msg)
     return false;
 }
 
+const String& Sms::getPhone()
+{
+    return _phone;
+}
+
+const String& Sms::getToken()
+{
+    return _token;
+}
+
 #endif /* SMS_NOTIFY_MOD */

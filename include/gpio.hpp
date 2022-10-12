@@ -128,7 +128,8 @@ typedef enum _GpioExtAddr
 typedef enum _GpioState
 {
     GPIO_LOW,
-    GPIO_HIGH
+    GPIO_HIGH,
+    GPIO_NONE
 } GpioState;
 
 typedef struct _GpioPin
@@ -159,8 +160,8 @@ public:
     virtual void setPinState(const GpioPin &pin, const GpioState state);
     virtual GpioState readState(const GpioPin &pin);
     virtual const GpioExtender *getExtenders() = 0;
-    virtual void StrToPin(const String &str, GpioPin &pin) = 0;
-    virtual String PinToStr(const GpioPin &pin) = 0;
+    virtual GpioPin strToPin(const String &str) = 0;
+    virtual String pinToStr(const GpioPin &pin) = 0;
     virtual void getGpioNames(String &names) = 0;
 };
 
@@ -211,9 +212,8 @@ public:
      * @brief Convert String name of GPIO to GpioPin
      * 
      * @param str Name of GPIO
-     * @param pin Output Pin
      */
-    void StrToPin(const String &str, GpioPin &pin);
+    GpioPin strToPin(const String &str);
 
     /**
      * @brief Convert Pin struct to string
@@ -221,7 +221,7 @@ public:
      * @param pin GPIO number
      * @return String GPIO name 
      */
-    String PinToStr(const GpioPin &pin);
+    String pinToStr(const GpioPin &pin);
 
     /**
      * @brief Get the Gpio Names object

@@ -22,18 +22,15 @@
 class ITelegram
 {
 #ifdef TELEGRAM_NOTIFY_MOD
-
 public:
     virtual void setCreds(const String &bot, const String &chat) = 0;
     virtual bool sendMsg(const String &msg) = 0;
-
 #endif /* TELEGRAM_NOTIFY_MOD */
 };
 
 class Telegram : public ITelegram
 {
 #ifdef TELEGRAM_NOTIFY_MOD
-
 public:
     void setCreds(const String &bot, const String &chat);
     bool sendMsg(const String &msg);
@@ -41,7 +38,6 @@ public:
 private:
     String _chatID;
     String _botToken;
-
 #endif /* TELEGRAM_NOTIFY_MOD */
 };
 

@@ -57,7 +57,7 @@ const PROGMEM char tgHtml[] = R"=====(
             let edToken = document.querySelector('#token')
             let edChatID = document.querySelector('#chatid')
 
-            fetch('/info/telegram').then(function(resp) {
+            fetch('/api/v1/telegram/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     edToken.value = json.token
@@ -66,7 +66,7 @@ const PROGMEM char tgHtml[] = R"=====(
         };
 
         function TestNotify() {
-            fetch('/test/telegram').then(function(resp) {
+            fetch('/api/v1/telegram/test').then(function(resp) {
                 return resp.json();
             }).then(function(json) {
                 if (json.result)
@@ -85,7 +85,7 @@ const PROGMEM char tgHtml[] = R"=====(
                 return
             }
 
-            fetch('/conf/telegram?'+ new URLSearchParams({
+            fetch('/api/v1/telegram/conf?'+ new URLSearchParams({
                         token: edToken.value,
                         chat_id: edChatID.value,
                     })).then(function(resp) {
