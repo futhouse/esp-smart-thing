@@ -13,6 +13,14 @@
  *****************************************************************************/
 
 #include "modules/secure.hpp"
+#ifdef ESP32
+#include <HTTPClient.h>
+#include <WiFi.h>
+#elif defined (ESP8266)
+#include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
+#endif
+#include <WiFiClientSecureBearSSL.h>
 
 #include "utils.hpp"
 
@@ -168,6 +176,18 @@ void Secure::setAlarm(bool status)
             _gpio->setPinState(_pinAlarm, GPIO_LOW);
         }
     }
+
+    if (_master) {
+        for (uint8_t i = 0; i < _remote.size(); i++) {
+            if (_remote[i].Enabled && (_remote[i].IP != "")) {
+                if (sendRemoteStatus(SECURE_REMOTE_ALARM_CMD, _remote[i].IP, status)) {
+                    _log->info("SECURE", "Send alarm \""+String(status)+"\" to remote dev \""+_remote[i].IP+"\"");
+                } else {
+                    _log->error("SECURE", "Failed to send alarm to remote dev \""+_remote[i].IP+"\"");
+                }
+            }
+        }
+    }
 }
 
 bool Secure::getArmed()
@@ -198,6 +218,18 @@ void Secure::setArmed(bool status, bool save=false)
     if (save) {
         saveStates();
     }
+
+    if (_master) {
+        for (uint8_t i = 0; i < _remote.size(); i++) {
+            if (_remote[i].Enabled && (_remote[i].IP != "")) {
+                if (sendRemoteStatus(SECURE_REMOTE_ARM_CMD, _remote[i].IP, status)) {
+                    _log->info("SECURE", "Send status \""+String(status)+"\" to remote dev \""+_remote[i].IP+"\"");
+                } else {
+                    _log->error("SECURE", "Failed to send status to remote dev \""+_remote[i].IP+"\"");
+                }
+            }
+        }
+    }
 }
 
 void Secure::handleMain()
@@ -212,12 +244,12 @@ void Secure::handleMain()
             switch (sensor.Type)
             {
                 case SECURE_REEDSWITCH_TYPE:
+                case SECURE_MICROWAVE_TYPE:
                     if ((state != sensor.LastState) && (state == GPIO_LOW))
                         runAlarm(sensor);
                     break;
 
                 case SECURE_PIR_TYPE:
-                case SECURE_MICROWAVE_TYPE:
                     if ((state != sensor.LastState) && (state == GPIO_HIGH))
                         runAlarm(sensor);
                     break;
@@ -340,6 +372,14 @@ bool Secure::saveStates()
         };
     }
 
+    for (uint8_t i = 0; i < _remote.size(); i++) {
+        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), 15);
+        cfg->SecureCfg.Remote[i].IP[15] = '\0';
+        cfg->SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
+    }
+
+    cfg->SecureCfg.Master = getMaster();
+
     return _flash->saveData();
 }
 
@@ -349,6 +389,7 @@ void Secure::loadStates()
 
     _keys.clear();
     _sensors.clear();
+    _remote.clear();
     _lastKey = "None";
 
     setInvertAlarm(secCfg.InvertedAlarm);
@@ -392,7 +433,7 @@ void Secure::loadStates()
             },
             LastState: GPIO_NONE
         });
-        
+
         _log->info("SECURE", "Add sensor. Name: " + String(sensor.Name) +
             " Type: " + typeToStr(static_cast<SecureType>(sensor.Type)) + 
             " Enabled: " + String(sensor.Enabled));
@@ -406,6 +447,15 @@ void Secure::loadStates()
         }
     }
 
+    for (uint8_t i = 0; i < SECURE_REMOTE_DEV_COUNT; i++) {
+        addRemoteDevice({
+            IP: String(secCfg.Remote[i].IP),
+            Enabled: secCfg.Remote[i].Enabled
+        });
+    }
+
+    setMaster(secCfg.Master);
+
     _gpio->setPinMode(_pinAlarm, GPIO_OUTPUT);
     _gpio->setPinMode(_pinLed, GPIO_OUTPUT);
     _gpio->setPinMode(_pinKey, GPIO_INPUT);
@@ -417,6 +467,55 @@ void Secure::loadStates()
         
     setArmed(secCfg.Armed);
     setAlarm(secCfg.Alarm);
+}
+
+void Secure::addRemoteDevice(const SecureRemoteDev &dev)
+{
+    _remote.push_back(dev);
+}
+
+std::vector<SecureRemoteDev>& Secure::getRemoteDevices()
+{
+    return _remote;
+}
+
+bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status)
+{
+    HTTPClient https;
+    BearSSL::WiFiClientSecure client;
+    String req = "";
+
+    client.setInsecure();
+
+    if (cmd == SECURE_REMOTE_ARM_CMD) {
+        req = "arm";
+    } else if (cmd == SECURE_REMOTE_ALARM_CMD) {
+        req = "alarm";
+    }
+
+    if (https.begin(client,
+        "http://" + ip + "/api/v1/secure/"+req+"?status=" + String(status)))
+    {
+        if (https.GET() == HTTP_CODE_OK) {
+            https.end();
+            return true;
+        }
+
+        https.end();
+    }
+
+    return false;
+}
+
+bool Secure::getMaster()
+{
+    return _master;
+}
+
+
+void Secure::setMaster(bool master)
+{
+    _master = master;
 }
 
 #endif /* SECURE_MOD */

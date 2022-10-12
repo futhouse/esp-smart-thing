@@ -31,6 +31,7 @@ void SecureApi::registerHandlers(const std::shared_ptr<EspServer> &server)
     _server->on("/api/v1/secure/key/add", std::bind(&SecureApi::secAddKeyHandler, this));
     _server->on("/api/v1/secure/key/clear", std::bind(&SecureApi::secClearKeysHandler, this));
     _server->on("/api/v1/secure/arm", std::bind(&SecureApi::secArmHandler, this));
+     _server->on("/api/v1/secure/alarm", std::bind(&SecureApi::secAlarmHandler, this));
     _server->on("/secure.html", std::bind(&SecureApi::secHtmlHandler, this));
 #endif
 }
@@ -66,6 +67,14 @@ void SecureApi::secInfoHandler()
         doc["sensors"][i]["type"] = _secure->typeToStr(sensors[i].Type);
         doc["sensors"][i]["pin"] = _gpio->pinToStr(sensors[i].Pin);
     }
+
+    const auto remote = _secure->getRemoteDevices();
+    for (uint8_t i = 0; i < remote.size(); i++) {
+        doc["remote"][i]["ip"] = remote[i].IP;
+        doc["remote"][i]["enabled"] = remote[i].Enabled;
+    }
+
+    doc["master"] = _secure->getMaster();
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
@@ -111,6 +120,15 @@ void SecureApi::secConfHandler()
         _secure->getSensors()[i].Pin = _gpio->strToPin(item["pin"]);
     }
 
+    JsonArray remote = static_cast<JsonArray>(doc["remote"]);
+    for (uint8_t i = 0; i < remote.size(); i++) {
+        const auto item = remote.getElement(i);
+        _secure->getRemoteDevices()[i].IP = static_cast<String>(item["ip"]);
+        _secure->getRemoteDevices()[i].Enabled = static_cast<bool>(item["enabled"]);
+    }
+
+    _secure->setMaster(static_cast<bool>(doc["master"]));
+
     doco["result"] = _secure->saveStates();
     _secure->loadStates();
 
@@ -135,6 +153,18 @@ void SecureApi::secArmHandler()
     DynamicJsonDocument doc(1024);
 
     _secure->setArmed((_server->arg("status") == "true") ? true : false, true);
+    doc["result"] = true;
+
+    serializeJson(doc, out);
+    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+}
+
+void SecureApi::secAlarmHandler()
+{
+    String out = "";
+    DynamicJsonDocument doc(1024);
+
+    _secure->setAlarm((_server->arg("status") == "true") ? true : false);
     doc["result"] = true;
 
     serializeJson(doc, out);

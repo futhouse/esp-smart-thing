@@ -107,7 +107,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms0' /></td>
                     <td><input type='checkbox' id='tg0' /></td>
                     <td><input type='checkbox' id='alrm0' /></td>
-                    <td><input type='checkbox' id='enable0' /></td>
+                    <td><input type='checkbox' id='enable0' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>2</a></td>
@@ -117,7 +117,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms1' /></td>
                     <td><input type='checkbox' id='tg1' /></td>
                     <td><input type='checkbox' id='alrm1' /></td>
-                    <td><input type='checkbox' id='enable1' /></td>
+                    <td><input type='checkbox' id='enable1' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>3</a></td>
@@ -127,7 +127,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms2' /></td>
                     <td><input type='checkbox' id='tg2' /></td>
                     <td><input type='checkbox' id='alrm2' /></td>
-                    <td><input type='checkbox' id='enable2' /></td>
+                    <td><input type='checkbox' id='enable2' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>4</a></td>
@@ -137,7 +137,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms3' /></td>
                     <td><input type='checkbox' id='tg3' /></td>
                     <td><input type='checkbox' id='alrm3' /></td>
-                    <td><input type='checkbox' id='enable3' /></td>
+                    <td><input type='checkbox' id='enable3' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>5</a></td>
@@ -147,7 +147,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms4' /></td>
                     <td><input type='checkbox' id='tg4' /></td>
                     <td><input type='checkbox' id='alrm4' /></td>
-                    <td><input type='checkbox' id='enable4' /></td>
+                    <td><input type='checkbox' id='enable4' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>6</a></td>
@@ -157,7 +157,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms5' /></td>
                     <td><input type='checkbox' id='tg5' /></td>
                     <td><input type='checkbox' id='alrm5' /></td>
-                    <td><input type='checkbox' id='enable5' /></td>
+                    <td><input type='checkbox' id='enable5' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>7</a></td>
@@ -167,7 +167,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms6' /></td>
                     <td><input type='checkbox' id='tg6' /></td>
                     <td><input type='checkbox' id='alrm6' /></td>
-                    <td><input type='checkbox' id='enable6' /></td>
+                    <td><input type='checkbox' id='enable6' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>8</a></td>
@@ -177,7 +177,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms7' /></td>
                     <td><input type='checkbox' id='tg7' /></td>
                     <td><input type='checkbox' id='alrm7' /></td>
-                    <td><input type='checkbox' id='enable7' /></td>
+                    <td><input type='checkbox' id='enable7' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>9</a></td>
@@ -187,7 +187,7 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms8' /></td>
                     <td><input type='checkbox' id='tg8' /></td>
                     <td><input type='checkbox' id='alrm8' /></td>
-                    <td><input type='checkbox' id='enable8' /></td>
+                    <td><input type='checkbox' id='enable8' onclick='DisableElements()' /></td>
                 </tr>
                 <tr align='center'>
                     <td><a>10</a></td>
@@ -197,7 +197,54 @@ const PROGMEM char secHtml[] = R"=====(
                     <td><input type='checkbox' id='sms9' /></td>
                     <td><input type='checkbox' id='tg9' /></td>
                     <td><input type='checkbox' id='alrm9' /></td>
-                    <td><input type='checkbox' id='enable9' /></td>
+                    <td><input type='checkbox' id='enable9' onclick='DisableElements()' /></td>
+                </tr>
+            </table>
+            <table border='0' cellpadding='4' cellspacing='0'>
+                <tr>
+                    <td colspan="3" align='center'>
+                        <font color='#800080'><h2>Remote Modules</h2></font>
+                    </td>
+                </tr>
+                <tr align='center'>
+                    <td colspan='2'>
+                        <form action=''>
+                            <input onclick="DisableElements()" type='radio' id='master' name='remm' checked='checked'>
+                            <label for='master'>Master Module</label>
+                            <input onclick="DisableElements()" type='radio' id='slave' name='remm'>
+                            <label for='slave'>Slave Module</label>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td align='center'><b>#</b></td>
+                    <td align='center'><b>IP</b></td>
+                    <td align='center'><b>Enabled</b></td>
+                </tr>
+                <tr align='center'>
+                    <td><a>1</a></td>
+                    <td><input type='edit' id='rmip0' /></td>
+                    <td><input type='checkbox' id='rmen0' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td><a>2</a></td>
+                    <td><input type='edit' id='rmip1' /></td>
+                    <td><input type='checkbox' id='rmen1' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td><a>3</a></td>
+                    <td><input type='edit' id='rmip2' /></td>
+                    <td><input type='checkbox' id='rmen2' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td><a>4</a></td>
+                    <td><input type='edit' id='rmip3' /></td>
+                    <td><input type='checkbox' id='rmen3' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td><a>5</a></td>
+                    <td><input type='edit' id='rmip4' /></td>
+                    <td><input type='checkbox' id='rmen4' onclick='DisableElements()' /></td>
                 </tr>
             </table>
             <table border='0' cellpadding='4' cellspacing='0'>
@@ -224,6 +271,8 @@ const PROGMEM char secHtml[] = R"=====(
             let gpioAlarm = document.querySelector('#gpioAlarm')
             let gpioKey = document.querySelector('#gpioKey')
             let cbInverted = document.querySelector('#cbInverted')
+            let cbMaster = document.querySelector("#master");
+            let cbSlave = document.querySelector("#slave");
 
             await fetch('/api/v1/gpio/info').then(function(resp) {
                     return resp.json();
@@ -328,6 +377,21 @@ const PROGMEM char secHtml[] = R"=====(
                             }
                         }
                     }
+                    for (let i = 0; i < json.remote.length; i++) {
+                        let edName = document.querySelector("#rmip"+i);
+                        let cbEnable = document.querySelector("#rmen"+i);
+
+                        edName.value = json.remote[i].ip
+                        cbEnable.checked = json.remote[i].enabled
+                    }
+                    if (json.master) {
+                        cbMaster.checked = true
+                        cbSlave.checked = false
+                    } else {
+                        cbMaster.checked = false
+                        cbSlave.checked = true
+                    }
+                    DisableElements()
                 })
         };
 
@@ -350,6 +414,7 @@ const PROGMEM char secHtml[] = R"=====(
                     })).then(function(resp) {
                 return resp.json();
             }).then(function(json) {
+                edKey.value = ""
                 if (json.result) {
                     location.reload();
                 }
@@ -367,11 +432,55 @@ const PROGMEM char secHtml[] = R"=====(
             })
         }
 
+        function DisableElements() {
+            let cbMaster = document.querySelector("#master");
+            for (let i = 0; i < 5; i++) {
+                let edName = document.querySelector("#rmip"+i);
+                let cbEnable = document.querySelector("#rmen"+i);
+
+                if (cbMaster.checked) {
+                    edName.disabled = !cbEnable.checked
+                    cbEnable.disabled = false
+                } else {
+                    edName.disabled = true
+                    cbEnable.disabled = true
+                }
+            }
+            for (let i = 0; i < 10; i++) {
+                let edName = document.querySelector('#name'+i)
+                let cmbType = document.querySelector('#type'+i)
+                let cmbGpio = document.querySelector('#gpio'+i)
+                let cbSms = document.querySelector('#sms'+i)
+                let cbTg = document.querySelector('#tg'+i)
+                let cbEnable = document.querySelector('#enable'+i)
+                let cbAlarm = document.querySelector("#alrm"+i);
+
+                edName.disabled = !cbEnable.checked
+                cmbType.disabled = !cbEnable.checked
+                cmbGpio.disabled = !cbEnable.checked
+                cbSms.disabled = !cbEnable.checked
+                cbTg.disabled = !cbEnable.checked
+                cbAlarm.disabled = !cbEnable.checked
+            }
+        }
+
         function SaveConfigs() {
             let gpioLED = document.querySelector('#gpioLED')
             let gpioAlarm = document.querySelector('#gpioAlarm')
             let gpioKey = document.querySelector('#gpioKey')
             let cbInverted = document.querySelector('#cbInverted')
+            let cbMaster = document.querySelector("#master");
+
+            let remote = []
+            for (let i = 0; i < 5; i++) {
+                let edName = document.querySelector("#rmip"+i);
+                let cbEnable = document.querySelector("#rmen"+i);
+
+                remote.push({
+                    "ip": edName.value,
+                    "enabled": cbEnable.checked
+                });
+            }
 
             let sensors = [];
             for (let i = 0; i < 10; i++) {
@@ -401,7 +510,9 @@ const PROGMEM char secHtml[] = R"=====(
                     "key": gpioKey.value,
                     "led": gpioLED.value
                 },
-                "sensors": sensors
+                "sensors": sensors,
+                "remote": remote,
+                "master": cbMaster.checked
             }
 
             fetch("/api/v1/secure/conf", {

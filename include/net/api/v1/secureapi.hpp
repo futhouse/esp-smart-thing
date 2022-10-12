@@ -45,6 +45,7 @@ private:
     void secHtmlHandler();
     void secVerifyHandler();
     void secArmHandler();
+    void secAlarmHandler();
     void secClearKeysHandler();
     void secAddKeyHandler();
 #endif

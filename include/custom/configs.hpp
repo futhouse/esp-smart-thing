@@ -35,6 +35,12 @@
  * Personal configuration
  */
 
+typedef struct _RemoteDev
+{
+    char IP[16];
+    bool Enabled;
+} RemoteDev;
+
 typedef struct _PinConfig
 {
     uint8_t Type;
@@ -96,6 +102,8 @@ typedef struct _SecureConfigs
     PinConfig           LedPin;
     SecureSensorConfig  Sensors[10];
     char                Keys[5][17];
+    bool                Master;
+    RemoteDev           Remote[5];
 } SecureConfigs;
 #endif
 

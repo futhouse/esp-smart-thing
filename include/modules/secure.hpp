@@ -34,6 +34,7 @@
 #define SECURE_KEY_COUNT        5
 #define SECURE_KEY_LEN          8
 #define SECURE_KEY_STR_LEN      17
+#define SECURE_REMOTE_DEV_COUNT 5
 
 typedef enum _SecurePins
 {
@@ -60,6 +61,18 @@ typedef struct _SecureSensor
     GpioPin     Pin;
     GpioState   LastState;
 } SecureSensor;
+
+typedef struct _SecureRemoteDev
+{
+    String  IP;
+    bool    Enabled;
+} SecureRemoteDev;
+
+typedef enum _SecureRemoteCmd
+{
+    SECURE_REMOTE_ARM_CMD,
+    SECURE_REMOTE_ALARM_CMD
+} SecureRemoteCmd;
 #endif /* SECURE_MOD */
 
 class ISecure
@@ -86,8 +99,12 @@ public:
     virtual std::vector<String>& getKeys() = 0;
     virtual void getTypes(std::vector<String> &types) = 0;
     virtual bool verifyKey(const String &key) = 0;
+    virtual void addRemoteDevice(const SecureRemoteDev &dev) = 0;
+    virtual std::vector<SecureRemoteDev>& getRemoteDevices() = 0;
     virtual bool saveStates() = 0;
     virtual void loadStates() = 0;
+    virtual bool getMaster() = 0;
+    virtual void setMaster(bool master) = 0;
 #endif /* SECURE_MOD */
 };
 
@@ -256,6 +273,35 @@ public:
      */
     bool verifyKey(const String &key);
 
+    /**
+     * @brief Add new remote security module
+     * 
+     * @param dev Security module
+     */
+    void addRemoteDevice(const SecureRemoteDev &dev);
+
+    /**
+     * @brief Get the Remote Devices modules
+     * 
+     * @return std::vector<SecureRemoteDev>& 
+     */
+    std::vector<SecureRemoteDev>& getRemoteDevices();
+
+    /**
+     * @brief Get master status of module
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool getMaster();
+    
+    /**
+     * @brief Set master status of module
+     * 
+     * @param master 
+     */
+    void setMaster(bool master);
+
 #endif /* SECURE_MOD */
 private:
     const std::shared_ptr<ILogger> _log;
@@ -275,12 +321,15 @@ private:
     GpioPin _pinLed;
     std::vector<SecureSensor> _sensors;
     std::vector<String> _keys;
+    std::vector<SecureRemoteDev> _remote;
     OneWire _oneWire;
     String _lastKey = "None";
+    bool _master = false;
 
     void handleMain();
     void handleKey();
     void runAlarm(const SecureSensor& sensor);
+    bool sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status);
 #endif /* SECURE_MOD */
 };
 
