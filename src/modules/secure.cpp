@@ -263,7 +263,7 @@ void Secure::runAlarm(const SecureSensor& sensor)
 
     auto cfg = _flash->getConfigs();
 
-    notify = String(cfg->DevName) + ": Sensor \"" + sensor.Name + "\"";
+    notify = String(cfg.DevName) + ": Sensor \"" + sensor.Name + "\"";
     switch (sensor.Type)
     {
         case SECURE_REEDSWITCH_TYPE:
@@ -309,7 +309,7 @@ void Secure::handleKey()
         HexArrayToStr(key, CONFIG_SECURE_KEY_LEN, strKey);
 
         _lastKey = String(strKey);
-        _log->info("SECURE", "User detected with key: " + _lastKey);
+        _log->info("SECURE", "User detected with key: \"" + _lastKey + "\"");
 
         if (!verifyKey(_lastKey)) {
             _log->info("SECURE", "Key not allowed");
@@ -321,43 +321,45 @@ void Secure::handleKey()
 
 bool Secure::saveStates()
 {
+    _log->info("SECURE", "Saving Security configs");
+
     auto cfg = _flash->getConfigs();
 
-    cfg->SecureCfg.Armed = _armed;
-    cfg->SecureCfg.Alarm = _alarm;
-    cfg->SecureCfg.InvertedAlarm = _invertAlarm;
+    cfg.SecureCfg.Armed = _armed;
+    cfg.SecureCfg.Alarm = _alarm;
+    cfg.SecureCfg.InvertedAlarm = _invertAlarm;
 
-    cfg->SecureCfg.AlarmPin = {
+    cfg.SecureCfg.AlarmPin = {
         Type: static_cast<uint8_t>(_pinAlarm.Type),
         Addr: _pinAlarm.Addr,
         Pin: _pinAlarm.Pin
     };
 
-    cfg->SecureCfg.KeyPin = {
+    cfg.SecureCfg.KeyPin = {
         Type: static_cast<uint8_t>(_pinKey.Type),
         Addr: _pinKey.Addr,
         Pin: _pinKey.Pin
     };
 
-    cfg->SecureCfg.LedPin = {
+    cfg.SecureCfg.LedPin = {
         Type: static_cast<uint8_t>(_pinLed.Type),
         Addr: _pinLed.Addr,
         Pin: _pinLed.Pin
     };
 
     for (uint8_t i = 0; i < _keys.size(); i++) {
-        strncpy(cfg->SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN - 1);
-        cfg->SecureCfg.Keys[i][CONFIG_SECURE_KEY_LEN - 1] = '\0';
+        strncpy(cfg.SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN - 1);
+        cfg.SecureCfg.Keys[i][CONFIG_SECURE_KEY_LEN - 1] = '\0';
     }
 
     for (uint8_t i = 0; i < _sensors.size(); i++) {
-        strncpy(cfg->SecureCfg.Sensors[i].Name, _sensors[i].Name.c_str(), 10);
-        cfg->SecureCfg.Sensors[i].Enabled = _sensors[i].Enabled;
-        cfg->SecureCfg.Sensors[i].Sms = _sensors[i].Sms;
-        cfg->SecureCfg.Sensors[i].Telegram = _sensors[i].Telegram;
-        cfg->SecureCfg.Sensors[i].Type = _sensors[i].Type;
-        cfg->SecureCfg.Sensors[i].Alarm = _sensors[i].Alarm;
-        cfg->SecureCfg.Sensors[i].Pin = {
+        strncpy(cfg.SecureCfg.Sensors[i].Name, _sensors[i].Name.c_str(), 10);
+        cfg.SecureCfg.Sensors[i].Enabled = _sensors[i].Enabled;
+        cfg.SecureCfg.Sensors[i].Sms = _sensors[i].Sms;
+        cfg.SecureCfg.Sensors[i].Telegram = _sensors[i].Telegram;
+        cfg.SecureCfg.Sensors[i].Type = _sensors[i].Type;
+        cfg.SecureCfg.Sensors[i].Alarm = _sensors[i].Alarm;
+        cfg.SecureCfg.Sensors[i].Pin = {
             Type: static_cast<uint8_t>(_sensors[i].Pin.Type),
             Addr: _sensors[i].Pin.Addr,
             Pin: _sensors[i].Pin.Pin
@@ -365,19 +367,21 @@ bool Secure::saveStates()
     }
 
     for (uint8_t i = 0; i < _remote.size(); i++) {
-        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN);
-        cfg->SecureCfg.Remote[i].IP[CONFIG_IP_LEN - 1] = '\0';
-        cfg->SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
+        strncpy(cfg.SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN);
+        cfg.SecureCfg.Remote[i].IP[CONFIG_IP_LEN - 1] = '\0';
+        cfg.SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
     }
 
-    cfg->SecureCfg.Master = getMaster();
+    cfg.SecureCfg.Master = getMaster();
 
     return _flash->saveData();
 }
 
 void Secure::loadStates()
 {
-    auto& secCfg = _flash->getConfigs()->SecureCfg;
+    _log->info("SECURE", "Loading Security configs");
+
+    auto& secCfg = _flash->getConfigs().SecureCfg;
 
     _keys.clear();
     _sensors.clear();
@@ -386,9 +390,9 @@ void Secure::loadStates()
 
     setInvertAlarm(secCfg.InvertedAlarm);
 
-    _log->info("SECURE", "Armed: " + String(secCfg.Armed));
-    _log->info("SECURE", "Alarm: " + String(secCfg.Alarm));
-    _log->info("SECURE", "InvertedAlarm: " + String(secCfg.InvertedAlarm));
+    _log->info("SECURE", "Armed: " + (secCfg.Armed == true) ? "\"true\"" : "\"false\"");
+    _log->info("SECURE", "Alarm: " + (secCfg.Alarm == true) ? "\"true\"" : "\"false\"");
+    _log->info("SECURE", "InvertedAlarm: " + (secCfg.InvertedAlarm == true) ? "\"true\"" : "\"false\"");
 
     setPin(SECURE_ALARM_PIN, { 
         Type: static_cast<GpioType>(secCfg.AlarmPin.Type),
@@ -426,16 +430,18 @@ void Secure::loadStates()
             LastState: GPIO_NONE
         });
 
-        _log->info("SECURE", "Add sensor Name: \"" + String(sensor.Name) +
-            "\" Type: \"" + typeToStr(static_cast<SecureType>(sensor.Type)) + 
-            "\" Enabled: \"" + String(sensor.Enabled) + "\"");
+        if (String(sensor.Name) != "") {
+            _log->info("SECURE", "Add sensor Name: \"" + String(sensor.Name) +
+                "\" Type: \"" + typeToStr(static_cast<SecureType>(sensor.Type)) + 
+                "\" Enabled: \"" + String(sensor.Enabled) + "\"");
+        }
     }
 
     for (uint8_t i = 0; i < CONFIG_SECURE_KEYS_COUNT; i++) {
         String key = String(secCfg.Keys[i]);
         if (key != "") {
             addKey(key);
-            _log->info("SECURE", "Add key: " + key);
+            _log->info("SECURE", "Add new key: \"" + key + "\"");
         }
     }
 

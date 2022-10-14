@@ -38,7 +38,7 @@ void DeviceApi::devInfoHandler()
     DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
 
-    doc["name"] = String(cfg->DevName);
+    doc["name"] = String(cfg.DevName);
     doc["ip"] = _net->getIP();
     doc["mac"] = _net->getMAC();
     serializeJson(doc, out);
@@ -52,7 +52,7 @@ void DeviceApi::devConfHandler()
     DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
     
-    strncpy(cfg->DevName, _server->arg("name").c_str(), 19);
+    strncpy(cfg.DevName, _server->arg("name").c_str(), 19);
 
     if (_flash->saveData())
         doc["result"] = true;

@@ -69,14 +69,14 @@ bool Telegram::saveStates()
 
     auto cfg = _flash->getConfigs();
 
-    strncpy(cfg->TelegramCfg.Token, _token.c_str(), CONFIG_TG_TOKEN_LEN);
-    cfg->TelegramCfg.Token[CONFIG_TG_TOKEN_LEN - 1] = '\0';
+    strncpy(cfg.TelegramCfg.Token, _token.c_str(), CONFIG_TG_TOKEN_LEN);
+    cfg.TelegramCfg.Token[CONFIG_TG_TOKEN_LEN - 1] = '\0';
 
     for (size_t i = 0; i < _users.size(); i++) {
-        cfg->TelegramCfg.Users[i].ChatID = _users[i].ChatID;
-        cfg->TelegramCfg.Users[i].Notify = _users[i].Notify;
-        cfg->TelegramCfg.Users[i].Bot = _users[i].Bot;
-        cfg->TelegramCfg.Users[i].Enabled = _users[i].Enabled;
+        cfg.TelegramCfg.Users[i].ChatID = _users[i].ChatID;
+        cfg.TelegramCfg.Users[i].Notify = _users[i].Notify;
+        cfg.TelegramCfg.Users[i].Bot = _users[i].Bot;
+        cfg.TelegramCfg.Users[i].Enabled = _users[i].Enabled;
     }
 
     return _flash->saveData();
@@ -84,7 +84,7 @@ bool Telegram::saveStates()
 
 void Telegram::loadStates()
 {
-    auto& tgCfg = _flash->getConfigs()->TelegramCfg;
+    auto& tgCfg = _flash->getConfigs().TelegramCfg;
 
     _log->info("TELEGRAM", "Loading Telegram configs");
     _users.clear();
@@ -102,7 +102,9 @@ void Telegram::loadStates()
             Enabled: user.Enabled
         });
 
-        _log->info("TELEGRAM", "Add new user ChatID: \"" + String(user.ChatID) + "\"");
+        if (user.ChatID != 0) {
+            _log->info("TELEGRAM", "Add new user ChatID: \"" + String(user.ChatID) + "\"");
+        }
     }
 }
 

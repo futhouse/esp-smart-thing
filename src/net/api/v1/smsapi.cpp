@@ -37,8 +37,8 @@ void SmsApi::smsInfoHandler()
     DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
 
-    doc["token"] = String(cfg->SmsCfg.Token);
-    doc["phone"] = String(cfg->SmsCfg.Phone);
+    doc["token"] = String(cfg.SmsCfg.Token);
+    doc["phone"] = String(cfg.SmsCfg.Phone);
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
@@ -50,9 +50,9 @@ void SmsApi::smsConfHandler()
     DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
 
-    strncpy(cfg->SmsCfg.Token, _server->arg("token").c_str(), 38);
-    strncpy(cfg->SmsCfg.Phone, _server->arg("phone").c_str(), 13);
-    _sms->setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
+    strncpy(cfg.SmsCfg.Token, _server->arg("token").c_str(), 38);
+    strncpy(cfg.SmsCfg.Phone, _server->arg("phone").c_str(), 13);
+    _sms->setCreds(cfg.SmsCfg.Token, cfg.SmsCfg.Phone);
 
     if (_flash->saveData())
         doc["result"] = true;
