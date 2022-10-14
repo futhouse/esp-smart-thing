@@ -32,7 +32,7 @@
 const auto logger = std::make_shared<Logger>();
 const auto flash = std::make_shared<Flash>();
 const auto sms = std::make_shared<Sms>();
-const auto tg = std::make_shared<Telegram>();
+const auto tg = std::make_shared<Telegram>(logger, flash);
 const auto dns = std::make_shared<DNSServer>();
 const auto espSrv = std::make_shared<EspServer>();
 const auto gpio = std::make_shared<Gpio>(logger);

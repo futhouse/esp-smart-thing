@@ -16,28 +16,103 @@
 #define __TELEGRAM_HPP__
 
 #include "custom/modules.hpp"
+#include "flash.hpp"
+#include "logger.hpp"
 
 #include <Arduino.h>
+#include <vector>
+#include <memory>
+
+#define TELEGRAM_USERS_COUNT    5
+
+typedef struct _TelegramUser
+{
+    unsigned    ChatID;
+    bool        Notify;
+    bool        Bot;
+    bool        Enabled;
+} TelegramUser;
 
 class ITelegram
 {
 #ifdef TELEGRAM_NOTIFY_MOD
 public:
-    virtual void setCreds(const String &bot, const String &chat) = 0;
-    virtual bool sendMsg(const String &msg) = 0;
+    virtual void setToken(const String &token) = 0;
+    virtual String& getToken() = 0;
+    virtual void addUser(const TelegramUser &user) = 0;
+    virtual std::vector<TelegramUser>& getUsers() = 0;
+    virtual bool sendNotify(const String &msg) = 0;
+    virtual bool saveStates() = 0;
+    virtual void loadStates() = 0;
 #endif /* TELEGRAM_NOTIFY_MOD */
 };
 
 class Telegram : public ITelegram
 {
-#ifdef TELEGRAM_NOTIFY_MOD
 public:
-    void setCreds(const String &bot, const String &chat);
-    bool sendMsg(const String &msg);
+    Telegram(const std::shared_ptr<ILogger>& log,
+            const std::shared_ptr<IFlash>& flash);
 
+#ifdef TELEGRAM_NOTIFY_MOD
+    /**
+     * @brief Set the Token object
+     * 
+     * @param token 
+     */
+    void setToken(const String &token);
+
+    /**
+     * @brief Get the BOT Token
+     * 
+     * @return String& 
+     */
+    String& getToken();
+
+    /**
+     * @brief Add new user
+     * 
+     * @param id 
+     */
+    void addUser(const TelegramUser &usr);
+
+    /**
+     * @brief Get the users
+     * 
+     * @return std::vector<TelegramUser> 
+     */
+    std::vector<TelegramUser>& getUsers();
+
+    /**
+     * @brief Send Telegram Notify
+     * 
+     * @param msg Notify message
+     * @return true 
+     * @return false 
+     */
+    bool sendNotify(const String &msg);
+
+    /**
+     * @brief Save states to EEPROM
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool saveStates();
+
+    /**
+     * @brief Loading states from EEPROM
+     * 
+     */
+    void loadStates();
+
+#endif /* TELEGRAM_NOTIFY_MOD */
 private:
-    String _chatID;
-    String _botToken;
+    const std::shared_ptr<ILogger> _log;
+    const std::shared_ptr<IFlash> _flash;
+
+#ifdef TELEGRAM_NOTIFY_MOD
+    std::vector<TelegramUser> _users;
+    String _token;
 #endif /* TELEGRAM_NOTIFY_MOD */
 };
 

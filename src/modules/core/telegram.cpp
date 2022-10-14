@@ -14,45 +14,98 @@
 
 #include "modules/core/telegram.hpp"
 
-#ifdef TELEGRAM_NOTIFY_MOD
-
 #include <UrlEncode.h>
-#ifdef ESP32
-#include <HTTPClient.h>
-#include <WiFi.h>
-#elif defined (ESP8266)
-#include <ESP8266HTTPClient.h>
-#include <ESP8266WiFi.h>
-#endif
-#include <WiFiClientSecureBearSSL.h>
+#include "net/client.hpp"
 
-void Telegram::setCreds(const String &bot, const String &chat)
+Telegram::Telegram(const std::shared_ptr<ILogger>& log,
+                    const std::shared_ptr<IFlash>& flash):
+                    _log(move(log)),
+                    _flash(move(flash))
 {
-    _botToken = bot;
-    _chatID = chat;
 }
 
-bool Telegram::sendMsg(const String &msg)
+#ifdef TELEGRAM_NOTIFY_MOD
+
+void Telegram::setToken(const String &token)
 {
-    HTTPClient https;
-    BearSSL::WiFiClientSecure client;
+    _token = token;
+}
 
-    client.setInsecure();
+String& Telegram::getToken()
+{
+    return _token;
+}
 
-    if (https.begin(client,
-        "https://api.telegram.org/bot" + _botToken +
-        "/sendMessage?chat_id=" + _chatID +
-        "&text=" + urlEncode(msg)))
-    {
-        if (https.GET() == HTTP_CODE_OK) {
-            https.end();
-            return true;
+void Telegram::addUser(const TelegramUser &usr)
+{
+    _users.push_back(usr);
+}
+
+std::vector<TelegramUser>& Telegram::getUsers()
+{
+    return _users;
+}
+
+bool Telegram::sendNotify(const String &msg)
+{
+    NetClient client(NET_CLIENT_HTTPS, "api.telegram.org");
+
+    for (uint8_t i = 0; i < _users.size(); i++) {
+        if (_users[i].Enabled && _users[i].Notify) {
+            _log->info("TELEGRAM", "Sending notify: " + msg);
+            if (!client.getRequest("/bot"+ _token +
+                                "/sendMessage?chat_id=" + String(_users[i].ChatID) +
+                                "&text=" + urlEncode(msg)))
+            {
+                return false;
+            }
         }
-
-        https.end();
     }
 
-    return false;
+    return true;
+}
+
+bool Telegram::saveStates()
+{
+    auto cfg = _flash->getConfigs();
+
+    _log->info("TELEGRAM", "Saving configs");
+
+    strncpy(cfg->TelegramCfg.Token, _token.c_str(), 47);
+    cfg->TelegramCfg.Token[46] = '\0';
+
+    for (uint8_t i = 0; i < _users.size(); i++) {
+        cfg->TelegramCfg.Users[i].ChatID = _users[i].ChatID;
+        cfg->TelegramCfg.Users[i].Notify = _users[i].Notify;
+        cfg->TelegramCfg.Users[i].Bot = _users[i].Bot;
+        cfg->TelegramCfg.Users[i].Enabled = _users[i].Enabled;
+    }
+
+    return _flash->saveData();
+}
+
+void Telegram::loadStates()
+{
+    auto& tgCfg = _flash->getConfigs()->TelegramCfg;
+
+    _log->info("TELEGRAM", "Loading configs");
+    _users.clear();
+
+    setToken(tgCfg.Token);
+    _log->info("TELEGRAM", "Set Token: " + _token);
+
+    for (uint8_t i = 0; i < TELEGRAM_USERS_COUNT; i++) {
+        const auto user = tgCfg.Users[i];
+
+        addUser({ 
+            ChatID: user.ChatID,
+            Notify: user.Notify,
+            Bot: user.Bot,
+            Enabled: user.Enabled
+        });
+
+        _log->info("TELEGRAM", "Add user ChatID: " + String(user.ChatID));
+    }
 }
 
 #endif /* TELEGRAM_NOTIFY_MOD */

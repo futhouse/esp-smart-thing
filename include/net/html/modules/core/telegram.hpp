@@ -32,10 +32,57 @@ const PROGMEM char tgHtml[] = R"=====(
                     <td align='right'><a>Token:</a></td>
                     <td align='left'><font color='blue'><input type='edit' id='token' /></font></td>
                 </tr>
+            </table>
+
+            <table border='0' cellpadding='4' cellspacing='0'>
                 <tr align='center'>
-                    <td align='right'>Chat ID:</td>
-                    <td align='left'><font color='blue'><input type='edit' id='chatid' /></td>
+                    <td colspan='4' align='center'><font color='#800080'><h2>Users</h2></font></td>
                 </tr>
+                <tr align='center'>
+                    <td align='center'><b>#</b></td>
+                    <td align='center'><b>ChatID</b></td>
+                    <td align='center'><b>Notify</b></td>
+                    <td align='center'><b>Bot</b></td>
+                    <td align='center'><b>Enabled</b></td>
+                </tr>
+                <tr align='center'>
+                    <td align='center'>1</td>
+                    <td align='center'><input type='edit' id='id0' /></td>
+                    <td><input type='checkbox' id='ntf0' /></td>
+                    <td><input type='checkbox' id='bot0' /></td>
+                    <td><input type='checkbox' id='en0' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td align='center'>2</td>
+                    <td align='center'><input type='edit' id='id1' /></td>
+                    <td><input type='checkbox' id='ntf1' /></td>
+                    <td><input type='checkbox' id='bot1' /></td>
+                    <td><input type='checkbox' id='en1' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td align='center'>3</td>
+                    <td align='center'><input type='edit' id='id2' /></td>
+                    <td><input type='checkbox' id='ntf2' /></td>
+                    <td><input type='checkbox' id='bot2' /></td>
+                    <td><input type='checkbox' id='en2' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td align='center'>4</td>
+                    <td align='center'><input type='edit' id='id3' /></td>
+                    <td><input type='checkbox' id='ntf3' /></td>
+                    <td><input type='checkbox' id='bot3' /></td>
+                    <td><input type='checkbox' id='en3' onclick='DisableElements()' /></td>
+                </tr>
+                <tr align='center'>
+                    <td align='center'>5</td>
+                    <td align='center'><input type='edit' id='id4' /></td>
+                    <td><input type='checkbox' id='ntf4' /></td>
+                    <td><input type='checkbox' id='bot4' /></td>
+                    <td><input type='checkbox' id='en4' onclick='DisableElements()' /></td>
+                </tr>
+            </table>
+
+            <table border='0' cellpadding='4' cellspacing='0'>
                 <tr align='center'>
                     <td colspan='2'>
                         <div id='answ'></div>
@@ -55,15 +102,39 @@ const PROGMEM char tgHtml[] = R"=====(
     <script>
         window.onload = function() {
             let edToken = document.querySelector('#token')
-            let edChatID = document.querySelector('#chatid')
 
             fetch('/api/v1/telegram/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     edToken.value = json.token
-                    edChatID.value = json.chat_id
+
+                    for (let i = 0; i < json.users.length; i++) {
+                        let edChat = document.querySelector("#id"+i);
+                        let cbNotify = document.querySelector("#ntf"+i);
+                        let cbBot = document.querySelector("#bot"+i);
+                        let cbEnabled = document.querySelector("#en"+i);
+
+                        cbNotify.checked = json.users[i].notify
+                        cbBot.checked = json.users[i].bot
+                        cbEnabled.checked = json.users[i].enabled
+                    }
+
+                    DisableElements()
                 })
-        };
+        }
+
+        function DisableElements() {
+            for (let i = 0; i < 5; i++) {
+                let edChat = document.querySelector("#id"+i);
+                let cbNotify = document.querySelector("#ntf"+i);
+                let cbBot = document.querySelector("#bot"+i);
+                let cbEnabled = document.querySelector("#en"+i);
+
+                edChat.disabled = !cbEnabled.checked
+                cbNotify.disabled = !cbEnabled.checked
+                cbBot.disabled = !cbEnabled.checked
+            }
+        }
 
         function TestNotify() {
             fetch('/api/v1/telegram/test').then(function(resp) {
@@ -78,17 +149,34 @@ const PROGMEM char tgHtml[] = R"=====(
 
         function SaveConfigs() {
             let edToken = document.querySelector('#token')
-            let edChatID = document.querySelector('#chatid')
 
-            if ((edToken.value == '') || (edChatID.value == '')) {
-                answ.innerHTML = '<a><font color="red">Empty fields!</font></a>'
-                return
+            let users = [];
+            for (let i = 0; i < 5; i++) {
+                let edChat = document.querySelector("#id"+i);
+                let cbNotify = document.querySelector("#ntf"+i);
+                let cbBot = document.querySelector("#bot"+i);
+                let cbEnabled = document.querySelector("#en"+i);
+
+                users.push({
+                        "chatid": Number(edChat.value),
+                        "notify": cbNotify.checked,
+                        "bot": cbBot.checked,
+                        "enabled": cbEnabled.checked,
+                    })
             }
 
-            fetch('/api/v1/telegram/conf?'+ new URLSearchParams({
-                        token: edToken.value,
-                        chat_id: edChatID.value,
-                    })).then(function(resp) {
+            let data = {
+                "token": edToken.value,
+                "users": users,
+            }
+
+            fetch("/api/v1/telegram/conf", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            }).then(function(resp) {
                 return resp.json();
             }).then(function(json) {
                 if (json.result)

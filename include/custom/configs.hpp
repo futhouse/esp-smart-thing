@@ -21,7 +21,7 @@
  * Configuration defines
  */
 
-#define CONFIG_MAGIC    0xA4A2
+#define CONFIG_MAGIC    0xA4A1
 
 #define CONFIG_DEFAULT_SSID     "EspSmartThing"
 
@@ -59,10 +59,18 @@ typedef struct _NetConfig
 } NetConfig;
 
 #ifdef TELEGRAM_NOTIFY_MOD
+typedef struct _TelegramUserConfig
+{
+    unsigned    ChatID;
+    bool        Notify;
+    bool        Bot;
+    bool        Enabled;
+} TelegramUserConfig;
+
 typedef struct _TelegramConfigs
 {
-    char Token[47];
-    char ChatID[10];
+    char                Token[47];
+    TelegramUserConfig  Users[5];
 } TelegramConfigs;
 #endif
 

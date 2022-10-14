@@ -85,7 +85,7 @@ void EspSmartThing::startApp()
 #endif
 #ifdef TELEGRAM_NOTIFY_MOD
     _log->info("EST", "Starting Telegram notifier");
-    _tg->setCreds(cfg->TelegramCfg.Token, cfg->TelegramCfg.ChatID);
+    _tg->loadStates();
 #endif
 #ifdef SECURE_MOD
     _log->info("EST", "Starting Security system");

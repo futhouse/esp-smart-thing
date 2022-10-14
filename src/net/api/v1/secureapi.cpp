@@ -47,14 +47,14 @@ void SecureApi::secInfoHandler()
     doc["alarm"] = _secure->getAlarm();
     doc["last_key"] = _secure->getLastKey();
     doc["inverted"] = _secure->getInvertAlarm();
+
     doc["pins"]["alarm"] = _gpio->pinToStr(_secure->getPin(SECURE_ALARM_PIN));
     doc["pins"]["key"] = _gpio->pinToStr(_secure->getPin(SECURE_KEY_PIN));
     doc["pins"]["led"] = _gpio->pinToStr(_secure->getPin(SECURE_LED_PIN));
 
     const auto keys = _secure->getKeys();
-    JsonArray jaKeys = doc["keys"].to<JsonArray>();
     for (uint8_t i = 0; i < keys.size(); i++) {
-        jaKeys.add(keys[i]);
+         doc["keys"][i] = keys[i];
     }
 
     const auto sensors = _secure->getSensors();
@@ -110,21 +110,21 @@ void SecureApi::secConfHandler()
 
     JsonArray sensors = static_cast<JsonArray>(doc["sensors"]);
     for (uint8_t i = 0; i < sensors.size(); i++) {
-        const auto item = sensors.getElement(i);
-        _secure->getSensors()[i].Name = static_cast<String>(item["name"]);
-        _secure->getSensors()[i].Enabled = static_cast<bool>(item["enabled"]);
-        _secure->getSensors()[i].Sms = static_cast<bool>(item["sms"]);
-        _secure->getSensors()[i].Telegram = static_cast<bool>(item["telegram"]);
-        _secure->getSensors()[i].Alarm = static_cast<bool>(item["alarm"]);
-        _secure->getSensors()[i].Type = _secure->strToType(item["type"]);
-        _secure->getSensors()[i].Pin = _gpio->strToPin(item["pin"]);
+        auto& sensor = _secure->getSensors()[i];
+        sensor.Name = static_cast<String>(sensors[i]["name"]);
+        sensor.Enabled = static_cast<bool>(sensors[i]["enabled"]);
+        sensor.Sms = static_cast<bool>(sensors[i]["sms"]);
+        sensor.Telegram = static_cast<bool>(sensors[i]["telegram"]);
+        sensor.Alarm = static_cast<bool>(sensors[i]["alarm"]);
+        sensor.Type = _secure->strToType(sensors[i]["type"]);
+        sensor.Pin = _gpio->strToPin(sensors[i]["pin"]);
     }
 
     JsonArray remote = static_cast<JsonArray>(doc["remote"]);
     for (uint8_t i = 0; i < remote.size(); i++) {
-        const auto item = remote.getElement(i);
-        _secure->getRemoteDevices()[i].IP = static_cast<String>(item["ip"]);
-        _secure->getRemoteDevices()[i].Enabled = static_cast<bool>(item["enabled"]);
+        auto& remDev = _secure->getRemoteDevices()[i];
+        remDev.IP = static_cast<String>(remote[i]["ip"]);
+        remDev.Enabled = static_cast<bool>(remote[i]["enabled"]);
     }
 
     _secure->setMaster(static_cast<bool>(doc["master"]));

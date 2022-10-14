@@ -288,7 +288,7 @@ void Secure::runAlarm(const SecureSensor& sensor)
 
 #ifdef TELEGRAM_NOTIFY_MOD
     if (sensor.Telegram)
-        _tg->sendMsg(notify);
+        _tg->sendNotify(notify);
 #endif
 #ifdef SMS_NOTIFY_MOD
     if (sensor.Sms)
