@@ -22,8 +22,8 @@ void WifiApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
     _server = server;
     _server->on("/wifi.html", std::bind(&WifiApi::wifiHandler, this));
-    _server->on("/api/v1/wifi/info", std::bind(&WifiApi::wifiInfoHandler, this));
-    _server->on("/api/v1/wifi/conf", std::bind(&WifiApi::wifiConfHandler, this));
+    _server->on(API_WIFI_INFO, std::bind(&WifiApi::wifiInfoHandler, this));
+    _server->on(API_WIFI_CONF, std::bind(&WifiApi::wifiConfHandler, this));
 }
 
 void WifiApi::wifiInfoHandler()

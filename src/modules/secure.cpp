@@ -15,6 +15,7 @@
 #include "modules/secure.hpp"
 #include "utils.hpp"
 #include "net/client.hpp"
+#include "net/api/api.hpp"
 
 const PROGMEM char secureTypes[][11] = {
     "ReedSwitch",
@@ -482,12 +483,12 @@ bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status
     NetClient client(NET_CLIENT_HTTP, ip);
 
     if (cmd == SECURE_REMOTE_ARM_CMD) {
-        NetRequest req("/api/v1/secure/arm");
+        NetRequest req(API_SECURE_ARM);
         req.setArg("status", (status == true) ? "true" : "false");
         return client.getRequest(req);
     }
     else if (cmd == SECURE_REMOTE_ALARM_CMD) {
-        NetRequest req("/api/v1/secure/alarm");
+        NetRequest req(API_SECURE_ALARM);
         req.setArg("status", (status == true) ? "true" : "false");
         return client.getRequest(req);
     }
@@ -499,7 +500,6 @@ bool Secure::getMaster()
 {
     return _master;
 }
-
 
 void Secure::setMaster(bool master)
 {

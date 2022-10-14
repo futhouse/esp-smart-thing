@@ -22,9 +22,9 @@ void SmsApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
 #ifdef SMS_NOTIFY_MOD
     _server = server;
-    _server->on("/api/v1/sms/info", std::bind(&SmsApi::smsInfoHandler, this));
-    _server->on("/api/v1/sms/conf", std::bind(&SmsApi::smsConfHandler, this));
-    _server->on("/api/v1/sms/test", std::bind(&SmsApi::smsTestHandler, this));
+    _server->on(API_SMS_INFO, std::bind(&SmsApi::smsInfoHandler, this));
+    _server->on(API_SMS_CONF, std::bind(&SmsApi::smsConfHandler, this));
+    _server->on(API_SMS_TEST, std::bind(&SmsApi::smsTestHandler, this));
     _server->on("/sms.html", std::bind(&SmsApi::smsHtmlHandler, this));
 #endif
 }
@@ -54,10 +54,7 @@ void SmsApi::smsConfHandler()
     strncpy(cfg.SmsCfg.Phone, _server->arg("phone").c_str(), 13);
     _sms->setCreds(cfg.SmsCfg.Token, cfg.SmsCfg.Phone);
 
-    if (_flash->saveData())
-        doc["result"] = true;
-    else
-        doc["result"] = false;
+    doc["result"] = _flash->saveData();
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
@@ -68,10 +65,7 @@ void SmsApi::smsTestHandler()
     String out = "";
     DynamicJsonDocument doc(1024);
 
-    if (_sms->sendMsg("Test notify!"))
-        doc["result"] = true;
-    else
-        doc["result"] = false;
+    doc["result"] = _sms->sendMsg("Test notify!");
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 

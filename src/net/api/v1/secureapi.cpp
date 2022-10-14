@@ -24,14 +24,14 @@ void SecureApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
 #ifdef SECURE_MOD
     _server = server;
-    _server->on("/api/v1/secure/info", std::bind(&SecureApi::secInfoHandler, this));
-    _server->on("/api/v1/secure/types", std::bind(&SecureApi::secTypesHandler, this));
-    _server->on("/api/v1/secure/conf", std::bind(&SecureApi::secConfHandler, this));
-    _server->on("/api/v1/secure/key/verify", std::bind(&SecureApi::secVerifyHandler, this));
-    _server->on("/api/v1/secure/key/add", std::bind(&SecureApi::secAddKeyHandler, this));
-    _server->on("/api/v1/secure/key/clear", std::bind(&SecureApi::secClearKeysHandler, this));
-    _server->on("/api/v1/secure/arm", std::bind(&SecureApi::secArmHandler, this));
-     _server->on("/api/v1/secure/alarm", std::bind(&SecureApi::secAlarmHandler, this));
+    _server->on(API_SECURE_INFO, std::bind(&SecureApi::secInfoHandler, this));
+    _server->on(API_SECURE_TYPES, std::bind(&SecureApi::secTypesHandler, this));
+    _server->on(API_SECURE_CONF, std::bind(&SecureApi::secConfHandler, this));
+    _server->on(API_SECURE_KEY_VERIFY, std::bind(&SecureApi::secVerifyHandler, this));
+    _server->on(API_SECURE_KEY_ADD, std::bind(&SecureApi::secAddKeyHandler, this));
+    _server->on(API_SECURE_KEY_CLEAR, std::bind(&SecureApi::secClearKeysHandler, this));
+    _server->on(API_SECURE_ARM, std::bind(&SecureApi::secArmHandler, this));
+    _server->on(API_SECURE_ALARM, std::bind(&SecureApi::secAlarmHandler, this));
     _server->on("/secure.html", std::bind(&SecureApi::secHtmlHandler, this));
 #endif
 }

@@ -9,6 +9,7 @@
 #include "net/api/v1/devapi.hpp"
 #include "net/html/misc.hpp"
 #include "net/html/info.hpp"
+#include "net/api/api.hpp"
 
 DeviceApi::DeviceApi(const std::shared_ptr<IFlash>& flash,
                      const std::shared_ptr<INetwork>& net):
@@ -20,8 +21,8 @@ DeviceApi::DeviceApi(const std::shared_ptr<IFlash>& flash,
 void DeviceApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
     _server = server;
-    _server->on("/api/v1/device/info", std::bind(&DeviceApi::devInfoHandler, this));
-    _server->on("/api/v1/device/conf", std::bind(&DeviceApi::devConfHandler, this));
+    _server->on(API_DEV_INFO, std::bind(&DeviceApi::devInfoHandler, this));
+    _server->on(API_DEV_CONF, std::bind(&DeviceApi::devConfHandler, this));
     _server->on("/", std::bind(&DeviceApi::devHtmlHandler, this));
 }
 
@@ -52,12 +53,10 @@ void DeviceApi::devConfHandler()
     DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
     
-    strncpy(cfg.DevName, _server->arg("name").c_str(), 19);
+    strncpy(cfg.DevName, _server->arg("name").c_str(), CONFIG_STR_LEN);
+    cfg.DevName[CONFIG_STR_LEN - 1] = '\0';
 
-    if (_flash->saveData())
-        doc["result"] = true;
-    else
-        doc["result"] = false;
+    doc["result"] = _flash->saveData();
 
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }

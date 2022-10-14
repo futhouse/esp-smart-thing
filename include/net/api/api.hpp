@@ -16,6 +16,38 @@
 #define __API_HPP__
 
 #include "net/espsrv.hpp"
+#include "custom/modules.hpp"
+
+#define API_DEV_INFO    "/api/v1/device/info"
+#define API_DEV_CONF    "/api/v1/device/conf"
+
+#define API_GPIO_INFO   "/api/v1/gpio/info"
+
+#define API_WIFI_INFO   "/api/v1/wifi/info"
+#define API_WIFI_CONF   "/api/v1/wifi/conf"
+
+#ifdef SMS_NOTIFY_MOD
+#define API_SMS_INFO    "/api/v1/sms/info"
+#define API_SMS_CONF    "/api/v1/sms/conf"
+#define API_SMS_TEST    "/api/v1/sms/test"
+#endif
+
+#ifdef TELEGRAM_NOTIFY_MOD
+#define API_TELEGRAM_INFO   "/api/v1/telegram/info"
+#define API_TELEGRAM_CONF   "/api/v1/telegram/conf"
+#define API_TELEGRAM_TEST   "/api/v1/telegram/test"
+#endif
+
+#ifdef SECURE_MOD
+#define API_SECURE_INFO         "/api/v1/secure/info"
+#define API_SECURE_TYPES        "/api/v1/secure/types"
+#define API_SECURE_CONF         "/api/v1/secure/conf"
+#define API_SECURE_KEY_VERIFY   "/api/v1/secure/key/verify"
+#define API_SECURE_KEY_ADD      "/api/v1/secure/key/add"
+#define API_SECURE_KEY_CLEAR    "/api/v1/secure/key/clear"
+#define API_SECURE_ARM          "/api/v1/secure/arm"
+#define API_SECURE_ALARM        "/api/v1/secure/alarm"
+#endif
 
 class IApi
 {

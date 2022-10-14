@@ -22,9 +22,9 @@ void TelegramApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
 #ifdef TELEGRAM_NOTIFY_MOD
     _server = server;
-    _server->on("/api/v1/telegram/info", std::bind(&TelegramApi::tgInfoHandler, this));
-    _server->on("/api/v1/telegram/conf", std::bind(&TelegramApi::tgConfHandler, this));
-    _server->on("/api/v1/telegram/test", std::bind(&TelegramApi::tgTestHandler, this));
+    _server->on(API_TELEGRAM_INFO, std::bind(&TelegramApi::tgInfoHandler, this));
+    _server->on(API_TELEGRAM_CONF, std::bind(&TelegramApi::tgConfHandler, this));
+    _server->on(API_TELEGRAM_TEST, std::bind(&TelegramApi::tgTestHandler, this));
     _server->on("/telegram.html", std::bind(&TelegramApi::tgHtmlHandler, this));
 #endif
 }

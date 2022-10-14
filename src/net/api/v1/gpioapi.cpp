@@ -18,7 +18,7 @@ GpioApi::GpioApi(const std::shared_ptr<IGpio> &gpio):
 void GpioApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
     _server = server;
-    _server->on("/api/v1/gpio/info", std::bind(&GpioApi::gpioInfoHandler, this));
+    _server->on(API_GPIO_INFO, std::bind(&GpioApi::gpioInfoHandler, this));
 }
 
 void GpioApi::gpioInfoHandler()
