@@ -23,8 +23,6 @@
 #include <vector>
 #include <memory>
 
-#define TELEGRAM_USERS_COUNT    5
-
 typedef struct _TelegramUser
 {
     unsigned    ChatID;

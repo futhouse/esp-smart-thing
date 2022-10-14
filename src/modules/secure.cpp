@@ -13,16 +13,8 @@
  *****************************************************************************/
 
 #include "modules/secure.hpp"
-#ifdef ESP32
-#include <HTTPClient.h>
-#include <WiFi.h>
-#elif defined (ESP8266)
-#include <ESP8266HTTPClient.h>
-#include <ESP8266WiFi.h>
-#endif
-#include <WiFiClientSecureBearSSL.h>
-
 #include "utils.hpp"
+#include "net/client.hpp"
 
 const PROGMEM char secureTypes[][11] = {
     "ReedSwitch",
@@ -144,7 +136,7 @@ void Secure::addSensor(const SecureSensor& sensor)
 
 void Secure::addKey(const String &key)
 {
-    if (_keys.size() > SECURE_KEY_COUNT)
+    if (_keys.size() > CONFIG_SECURE_KEYS_COUNT)
         _keys.pop_back();
     _keys.push_back(key);
 }
@@ -181,9 +173,9 @@ void Secure::setAlarm(bool status)
         for (uint8_t i = 0; i < _remote.size(); i++) {
             if (_remote[i].Enabled && (_remote[i].IP != "")) {
                 if (sendRemoteStatus(SECURE_REMOTE_ALARM_CMD, _remote[i].IP, status)) {
-                    _log->info("SECURE", "Send alarm \""+String(status)+"\" to remote dev \""+_remote[i].IP+"\"");
+                    _log->info("SECURE", "Send alarm Status:\""+String(status)+"\" to remote dev IP: \""+_remote[i].IP+"\"");
                 } else {
-                    _log->error("SECURE", "Failed to send alarm to remote dev \""+_remote[i].IP+"\"");
+                    _log->error("SECURE", "Failed to send alarm to remote dev IP: \""+_remote[i].IP+"\"");
                 }
             }
         }
@@ -310,11 +302,11 @@ bool Secure::verifyKey(const String &key)
 
 void Secure::handleKey()
 {
-    uint8_t key[SECURE_KEY_LEN];
-    char strKey[SECURE_KEY_STR_LEN];
+    uint8_t key[CONFIG_SECURE_KEY_LEN];
+    char strKey[CONFIG_SECURE_KEY_LEN];
 
     if (_oneWire.search(key)) {
-        HexArrayToStr(key, SECURE_KEY_LEN, strKey);
+        HexArrayToStr(key, CONFIG_SECURE_KEY_LEN, strKey);
 
         _lastKey = String(strKey);
         _log->info("SECURE", "User detected with key: " + _lastKey);
@@ -354,8 +346,8 @@ bool Secure::saveStates()
     };
 
     for (uint8_t i = 0; i < _keys.size(); i++) {
-        strncpy(cfg->SecureCfg.Keys[i], _keys[i].c_str(), SECURE_KEY_STR_LEN - 1);
-        cfg->SecureCfg.Keys[i][SECURE_KEY_STR_LEN - 1] = '\0';
+        strncpy(cfg->SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN - 1);
+        cfg->SecureCfg.Keys[i][CONFIG_SECURE_KEY_LEN - 1] = '\0';
     }
 
     for (uint8_t i = 0; i < _sensors.size(); i++) {
@@ -373,8 +365,8 @@ bool Secure::saveStates()
     }
 
     for (uint8_t i = 0; i < _remote.size(); i++) {
-        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), 15);
-        cfg->SecureCfg.Remote[i].IP[15] = '\0';
+        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN);
+        cfg->SecureCfg.Remote[i].IP[CONFIG_IP_LEN - 1] = '\0';
         cfg->SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
     }
 
@@ -416,7 +408,7 @@ void Secure::loadStates()
         Pin: secCfg.LedPin.Pin 
     });
 
-    for (uint8_t i = 0; i < SECURE_SENSORS_COUNT; i++) {
+    for (uint8_t i = 0; i < CONFIG_SECURE_SENSORS_COUNT; i++) {
         const auto sensor = secCfg.Sensors[i];
 
         addSensor({ 
@@ -434,12 +426,12 @@ void Secure::loadStates()
             LastState: GPIO_NONE
         });
 
-        _log->info("SECURE", "Add sensor. Name: " + String(sensor.Name) +
-            " Type: " + typeToStr(static_cast<SecureType>(sensor.Type)) + 
-            " Enabled: " + String(sensor.Enabled));
+        _log->info("SECURE", "Add sensor Name: \"" + String(sensor.Name) +
+            "\" Type: \"" + typeToStr(static_cast<SecureType>(sensor.Type)) + 
+            "\" Enabled: \"" + String(sensor.Enabled) + "\"");
     }
 
-    for (uint8_t i = 0; i < SECURE_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < CONFIG_SECURE_KEYS_COUNT; i++) {
         String key = String(secCfg.Keys[i]);
         if (key != "") {
             addKey(key);
@@ -447,7 +439,7 @@ void Secure::loadStates()
         }
     }
 
-    for (uint8_t i = 0; i < SECURE_REMOTE_DEV_COUNT; i++) {
+    for (uint8_t i = 0; i < CONFIG_SECURE_REMOTE_COUNT; i++) {
         addRemoteDevice({
             IP: String(secCfg.Remote[i].IP),
             Enabled: secCfg.Remote[i].Enabled
@@ -481,27 +473,17 @@ std::vector<SecureRemoteDev>& Secure::getRemoteDevices()
 
 bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status)
 {
-    HTTPClient https;
-    BearSSL::WiFiClientSecure client;
-    String req = "";
-
-    client.setInsecure();
+    NetClient client(NET_CLIENT_HTTP, ip);
 
     if (cmd == SECURE_REMOTE_ARM_CMD) {
-        req = "arm";
-    } else if (cmd == SECURE_REMOTE_ALARM_CMD) {
-        req = "alarm";
+        NetRequest req("/api/v1/secure/arm");
+        req.setArg("status", (status == true) ? "true" : "false");
+        return client.getRequest(req);
     }
-
-    if (https.begin(client,
-        "http://" + ip + "/api/v1/secure/"+req+"?status=" + String(status)))
-    {
-        if (https.GET() == HTTP_CODE_OK) {
-            https.end();
-            return true;
-        }
-
-        https.end();
+    else if (cmd == SECURE_REMOTE_ALARM_CMD) {
+        NetRequest req("/api/v1/secure/alarm");
+        req.setArg("status", (status == true) ? "true" : "false");
+        return client.getRequest(req);
     }
 
     return false;

@@ -21,15 +21,12 @@
  * Configuration defines
  */
 
-#define CONFIG_MAGIC    0xA4A1
-
+#define CONFIG_MAGIC            0xA4A1
 #define CONFIG_DEFAULT_SSID     "EspSmartThing"
-
 #define CONFIG_DNS_SERVER_PORT  53
-
 #define CONFIG_EXT_GPIO_COUNT   8
-
-#define CONFIG_STR_LEN  20
+#define CONFIG_STR_LEN          20
+#define CONFIG_IP_LEN           16
 
 /*
  * Personal configuration
@@ -37,7 +34,7 @@
 
 typedef struct _RemoteDev
 {
-    char IP[16];
+    char IP[CONFIG_IP_LEN];
     bool Enabled;
 } RemoteDev;
 
@@ -59,6 +56,9 @@ typedef struct _NetConfig
 } NetConfig;
 
 #ifdef TELEGRAM_NOTIFY_MOD
+#define CONFIG_TG_TOKEN_LEN     47
+#define CONFIG_TG_USERS_COUNT   5
+
 typedef struct _TelegramUserConfig
 {
     unsigned    ChatID;
@@ -69,29 +69,32 @@ typedef struct _TelegramUserConfig
 
 typedef struct _TelegramConfigs
 {
-    char                Token[47];
-    TelegramUserConfig  Users[5];
+    char                Token[CONFIG_TG_TOKEN_LEN];
+    TelegramUserConfig  Users[CONFIG_TG_USERS_COUNT];
 } TelegramConfigs;
 #endif
 
 #ifdef SMS_NOTIFY_MOD
+#define CONFIG_SMS_TOKEN_LEN    38
+#define CONFIG_SMS_PHONE_LEN    13
+
 typedef struct _SmsConfigs
 {
-    char Token[38];
-    char Phone[13];
+    char Token[CONFIG_SMS_TOKEN_LEN];
+    char Phone[CONFIG_SMS_PHONE_LEN];
 } SmsConfigs;
 #endif
 
-#ifdef SOCKET_MOD
-typedef struct _SocketConfigs
-{
-} SocketConfigs;
-#endif
-
 #ifdef SECURE_MOD
+#define CONFIG_SECURE_NAME_LEN      10
+#define CONFIG_SECURE_SENSORS_COUNT 10
+#define CONFIG_SECURE_KEYS_COUNT    5
+#define CONFIG_SECURE_KEY_LEN       17
+#define CONFIG_SECURE_REMOTE_COUNT  5
+
 typedef struct _SecureSensorConfig
 {
-    char        Name[10];
+    char        Name[CONFIG_SECURE_NAME_LEN];
     uint8_t     Type;
     bool        Enabled;
     bool        Telegram;
@@ -108,10 +111,10 @@ typedef struct _SecureConfigs
     PinConfig           AlarmPin;
     PinConfig           KeyPin;
     PinConfig           LedPin;
-    SecureSensorConfig  Sensors[10];
-    char                Keys[5][17];
+    SecureSensorConfig  Sensors[CONFIG_SECURE_SENSORS_COUNT];
+    char                Keys[CONFIG_SECURE_KEYS_COUNT][CONFIG_SECURE_KEY_LEN];
     bool                Master;
-    RemoteDev           Remote[5];
+    RemoteDev           Remote[CONFIG_SECURE_REMOTE_COUNT];
 } SecureConfigs;
 #endif
 
@@ -129,9 +132,6 @@ typedef struct _Configs
 #endif
 #ifdef SMS_NOTIFY_MOD
     SmsConfigs      SmsCfg;
-#endif
-#ifdef SOCKET_MOD
-    SocketConfigs   SocketCfg;
 #endif
 #ifdef SECURE_MOD
     SecureConfigs   SecureCfg;

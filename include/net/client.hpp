@@ -17,6 +17,10 @@
 
 #include <Arduino.h>
 
+#include "net/request.hpp"
+
+#define NET_CLIENT_TIMEOUT  10000
+
 typedef enum _NetClientType
 {
     NET_CLIENT_HTTP,
@@ -44,6 +48,15 @@ public:
     bool getRequest(const String& req);
 
     /**
+     * @brief GET request
+     * 
+     * @param req Request struct
+     * @return true 
+     * @return false 
+     */
+    bool getRequest(NetRequest& req);
+
+    /**
      * @brief Get the Payload after request complete
      * 
      * @return String& 
@@ -53,6 +66,8 @@ public:
 private:
     String _payload = "";
     String _addr = "";
+
+    bool request(const String& req);
 };
 
 #endif /* __NET_CLIENT_HPP__ */

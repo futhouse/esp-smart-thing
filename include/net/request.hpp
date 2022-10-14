@@ -12,37 +12,30 @@
  *
  *****************************************************************************/
 
-#include "modules/core/sms.hpp"
-#include "net/client.hpp"
+#ifndef __NET_REQUEST_HPP__
+#define __NET_REQUEST_HPP__
 
-#ifdef SMS_NOTIFY_MOD
+#include <Arduino.h>
 
-void Sms::setCreds(const String &token, const String &phone)
+#include <map>
+
+class NetRequest
 {
-    _token = token;
-    _phone = phone;
-}
+public:
+    NetRequest(const String &req);
 
-bool Sms::sendMsg(const String &msg)
-{
-    NetClient client(NET_CLIENT_HTTPS, "sms.ru");
+    void setArg(const String &name, const String &value);
 
-    NetRequest req("/sms/send");
-    req.setArg("api_id", _token);
-    req.setArg("to", _phone);
-    req.setArgE("msg", msg);
-    
-    return client.getRequest(req);
-}
+    void setArgE(const String &name, const String &value);
 
-const String& Sms::getPhone()
-{
-    return _phone;
-}
+    void setArg(const String &name, const int value);
 
-const String& Sms::getToken()
-{
-    return _token;
-}
+    const String& getResult();
 
-#endif /* SMS_NOTIFY_MOD */
+private:
+    std::map<String, String> _parts;
+    const String _req;
+    String _res;
+};
+
+#endif /* __NET_REQUEST_HPP__ */

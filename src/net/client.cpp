@@ -41,14 +41,29 @@ NetClient::NetClient(NetClientType typ, const String& addr)
 
 bool NetClient::getRequest(const String& req)
 {
+    return request(req);
+}
+
+bool NetClient::getRequest(NetRequest& req)
+{
+    return request(req.getResult());
+}
+
+String& NetClient::getPayload()
+{
+    return _payload;
+}
+
+bool NetClient::request(const String& req)
+{
     HTTPClient https;
     BearSSL::WiFiClientSecure client;
 
     client.setInsecure();
 
-    if (https.begin(client, _addr + req))
-    {
-        if (https.GET() == HTTP_CODE_OK) {
+    if (https.begin(client, _addr + req)) {
+        int code = https.GET();
+        if ((code == HTTP_CODE_OK) || (code == HTTPC_ERROR_READ_TIMEOUT)) {
             _payload = client.readString();
             https.end();
             return true;
@@ -57,9 +72,4 @@ bool NetClient::getRequest(const String& req)
     }
 
     return false;
-}
-
-String& NetClient::getPayload()
-{
-    return _payload;
 }

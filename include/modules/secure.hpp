@@ -30,12 +30,6 @@
 #include <vector>
 #include <OneWire.h>
 
-#define SECURE_SENSORS_COUNT    10
-#define SECURE_KEY_COUNT        5
-#define SECURE_KEY_LEN          8
-#define SECURE_KEY_STR_LEN      17
-#define SECURE_REMOTE_DEV_COUNT 5
-
 typedef enum _SecurePins
 {
     SECURE_ALARM_PIN,

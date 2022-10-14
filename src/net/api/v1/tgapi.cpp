@@ -79,10 +79,7 @@ void TelegramApi::tgTestHandler()
     String out = "";
     DynamicJsonDocument doc(1024);
 
-    if (_tg->sendNotify("Test notify!"))
-        doc["result"] = true;
-    else
-        doc["result"] = false;
+    doc["result"] = _tg->sendNotify("Test notify!");
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 

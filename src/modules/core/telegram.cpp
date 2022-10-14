@@ -13,8 +13,6 @@
  *****************************************************************************/
 
 #include "modules/core/telegram.hpp"
-
-#include <UrlEncode.h>
 #include "net/client.hpp"
 
 Telegram::Telegram(const std::shared_ptr<ILogger>& log,
@@ -50,15 +48,15 @@ bool Telegram::sendNotify(const String &msg)
 {
     NetClient client(NET_CLIENT_HTTPS, "api.telegram.org");
 
-    for (uint8_t i = 0; i < _users.size(); i++) {
+    NetRequest req("/bot"+ _token + "/sendMessage");
+    req.setArgE("text", msg);
+
+    for (size_t i = 0; i < _users.size(); i++) {
         if (_users[i].Enabled && _users[i].Notify) {
-            _log->info("TELEGRAM", "Sending notify: " + msg);
-            if (!client.getRequest("/bot"+ _token +
-                                "/sendMessage?chat_id=" + String(_users[i].ChatID) +
-                                "&text=" + urlEncode(msg)))
-            {
+            _log->info("TELEGRAM", "Sending notify: \"" + msg + "\"");
+            req.setArg("chat_id", _users[i].ChatID);
+            if (!client.getRequest(req))
                 return false;
-            }
         }
     }
 
@@ -67,14 +65,14 @@ bool Telegram::sendNotify(const String &msg)
 
 bool Telegram::saveStates()
 {
+    _log->info("TELEGRAM", "Saving Telegram configs");
+
     auto cfg = _flash->getConfigs();
 
-    _log->info("TELEGRAM", "Saving configs");
+    strncpy(cfg->TelegramCfg.Token, _token.c_str(), CONFIG_TG_TOKEN_LEN);
+    cfg->TelegramCfg.Token[CONFIG_TG_TOKEN_LEN - 1] = '\0';
 
-    strncpy(cfg->TelegramCfg.Token, _token.c_str(), 47);
-    cfg->TelegramCfg.Token[46] = '\0';
-
-    for (uint8_t i = 0; i < _users.size(); i++) {
+    for (size_t i = 0; i < _users.size(); i++) {
         cfg->TelegramCfg.Users[i].ChatID = _users[i].ChatID;
         cfg->TelegramCfg.Users[i].Notify = _users[i].Notify;
         cfg->TelegramCfg.Users[i].Bot = _users[i].Bot;
@@ -88,13 +86,13 @@ void Telegram::loadStates()
 {
     auto& tgCfg = _flash->getConfigs()->TelegramCfg;
 
-    _log->info("TELEGRAM", "Loading configs");
+    _log->info("TELEGRAM", "Loading Telegram configs");
     _users.clear();
 
     setToken(tgCfg.Token);
-    _log->info("TELEGRAM", "Set Token: " + _token);
+    _log->info("TELEGRAM", "Set Token: \"" + _token + "\"");
 
-    for (uint8_t i = 0; i < TELEGRAM_USERS_COUNT; i++) {
+    for (size_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
         const auto user = tgCfg.Users[i];
 
         addUser({ 
@@ -104,7 +102,7 @@ void Telegram::loadStates()
             Enabled: user.Enabled
         });
 
-        _log->info("TELEGRAM", "Add user ChatID: " + String(user.ChatID));
+        _log->info("TELEGRAM", "Add new user ChatID: \"" + String(user.ChatID) + "\"");
     }
 }
 
