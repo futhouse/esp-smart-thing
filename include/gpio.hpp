@@ -162,7 +162,7 @@ public:
     virtual const GpioExtender *getExtenders() = 0;
     virtual GpioPin strToPin(const String &str) = 0;
     virtual String pinToStr(const GpioPin &pin) = 0;
-    virtual void getGpioNames(String &names) = 0;
+    virtual void getGpioNames(std::vector<String> &names) = 0;
 };
 
 class Gpio: public IGpio
@@ -228,7 +228,7 @@ public:
      * 
      * @param names Out pins
      */
-    void getGpioNames(String &names);
+    void getGpioNames(std::vector<String> &names);
 
 private:
     const std::shared_ptr<ILogger> _log;

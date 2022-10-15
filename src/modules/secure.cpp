@@ -391,9 +391,10 @@ void Secure::loadStates()
 
     setInvertAlarm(secCfg.InvertedAlarm);
 
-    _log->info("SECURE", "Armed: " + (secCfg.Armed == true) ? "\"true\"" : "\"false\"");
-    _log->info("SECURE", "Alarm: " + (secCfg.Alarm == true) ? "\"true\"" : "\"false\"");
-    _log->info("SECURE", "InvertedAlarm: " + (secCfg.InvertedAlarm == true) ? "\"true\"" : "\"false\"");
+    _log->info("SECURE", "Armed: \"" + String(secCfg.Armed) + "\"");
+    _log->info("SECURE", "Alarm: \"" + String(secCfg.Alarm) + "\"");
+    _log->info("SECURE", "InvertedAlarm: \"" + String(secCfg.InvertedAlarm) + "\"");
+    _log->info("SECURE", "Master: \"" + String(secCfg.Master) + "\"");
 
     setPin(SECURE_ALARM_PIN, { 
         Type: static_cast<GpioType>(secCfg.AlarmPin.Type),
@@ -440,10 +441,9 @@ void Secure::loadStates()
 
     for (uint8_t i = 0; i < CONFIG_SECURE_KEYS_COUNT; i++) {
         String key = String(secCfg.Keys[i]);
-        if (key != "") {
-            addKey(key);
+        addKey(key);
+        if (key != "")
             _log->info("SECURE", "Add new key: \"" + key + "\"");
-        }
     }
 
     for (uint8_t i = 0; i < CONFIG_SECURE_REMOTE_COUNT; i++) {

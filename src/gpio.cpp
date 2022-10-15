@@ -315,48 +315,27 @@ GpioPin Gpio::strToPin(const String &str)
     return pin;
 }
 
-void Gpio::getGpioNames(String &names)
+void Gpio::getGpioNames(std::vector<String> &names)
 {
-    names = "";
-
     for (uint8_t i = 0; i < GPIO_INTERNAL_COUNT; i++)
-    {
-        names += "\"" + IntPinsNames[i].Name + "\"";
-        if (i < GPIO_INTERNAL_COUNT - 1)
-            names += ",";
-    }
+        names.push_back(IntPinsNames[i].Name);
 
     for (uint8_t i = 0; i < GPIO_EXTENDERS_COUNT; i++)
     {
         if (_ext[i].Type == GPIO_PCF_8574)
         {
-            names += ",";
             for (uint8_t j = 0; j < GPIO_PINS_PER_PCF8574_EXTENDER; j++)
-            {
-                names += "\"GPIO_PCF8574_" + String(_ext[i].Addr) + "_" + String(j);
-                if (j != GPIO_PINS_PER_PCF8574_EXTENDER - 1)
-                    names += "\",";
-            }
+                names.push_back("GPIO_PCF8574_" + String(_ext[i].Addr) + "_" + String(j));
         }
         else if (_ext[i].Type == GPIO_MCP_23017)
         {
-            names += ",";
             for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
-            {
-                names += "\"GPIO_MCP23017_" + String(_ext[i].Addr) + "_" + String(j);
-                if (j != GPIO_PINS_PER_REGULAR_EXTENDER - 1)
-                    names += "\",";
-            }
+                names.push_back("GPIO_MCP23017_" + String(_ext[i].Addr) + "_" + String(j));
         }
         else if (_ext[i].Type == GPIO_PCA_9555)
         {
-            names += ",";
             for (uint8_t j = 0; j < GPIO_PINS_PER_REGULAR_EXTENDER; j++)
-            {
-                names += "\"GPIO_PCA9555_" + String(_ext[i].Addr) + "_" + String(j);
-                if (j != GPIO_PINS_PER_REGULAR_EXTENDER - 1)
-                    names += "\",";
-            }
+                names.push_back("GPIO_PCA9555_" + String(_ext[i].Addr) + "_" + String(j));
         }
     }
 }

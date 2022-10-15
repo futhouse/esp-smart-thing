@@ -23,9 +23,15 @@ void GpioApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 
 void GpioApi::gpioInfoHandler()
 {
-    String names;
+    String out;
+    std::vector<String> gpios;
+    DynamicJsonDocument doc(2048);
 
-    _gpio->getGpioNames(names);
+    _gpio->getGpioNames(gpios);
+    for (uint8_t i = 0; i < gpios.size(); i++)
+        doc[i] = gpios[i];
 
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, "[" + names + "]"); 
+    serializeJson(doc, out);
+
+    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }
