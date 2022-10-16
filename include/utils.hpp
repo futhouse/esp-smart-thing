@@ -17,6 +17,21 @@
 
 #include <Arduino.h>
 
+/**
+ * @brief Convert Hex values to string
+ * 
+ * @param arr Hex array
+ * @param size Size of Hex array
+ * @param out Out string
+ */
 void HexArrayToStr(uint8_t* arr, size_t size, char out[]);
+
+/**
+ * @brief Convert boolean to string
+ * 
+ * @param value Boolean value
+ * @return String Output string
+ */
+String BoolToStr(bool value);
 
 #endif /* __UTILS_HPP__ */

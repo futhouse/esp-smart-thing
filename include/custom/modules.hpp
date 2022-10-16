@@ -28,7 +28,6 @@
  * 
  */
 
-//#define SOCKET_MOD
 #define SECURE_MOD
 
 #endif /* __MODULES_HPP__ */

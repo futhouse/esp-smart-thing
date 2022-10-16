@@ -32,13 +32,13 @@ void WifiApi::wifiInfoHandler()
     DynamicJsonDocument doc(1024);
     auto cfg = _flash->getConfigs();
 
-    doc["ssid"] = String(cfg.NetCfg.SSID);
-    doc["passwd"] = String(cfg.NetCfg.Password);
-    doc["ap"] = (!cfg.NetCfg.IsConnectAP) ? true : false;
-    doc["inverted"] = cfg.NetCfg.IsInverted;
-    doc["enabled"] = cfg.NetCfg.IsLedEnabled;
+    doc["ssid"] = String(cfg->NetCfg.SSID);
+    doc["passwd"] = String(cfg->NetCfg.Password);
+    doc["ap"] = (!cfg->NetCfg.IsConnectAP) ? true : false;
+    doc["inverted"] = cfg->NetCfg.IsInverted;
+    doc["enabled"] = cfg->NetCfg.IsLedEnabled;
 
-    auto led = cfg.NetCfg.StatusLED;
+    auto led = cfg->NetCfg.StatusLED;
     auto ledPin = GpioPin
     {
         Type: static_cast<GpioType>(led.Type),
@@ -59,25 +59,25 @@ void WifiApi::wifiConfHandler()
     GpioPin ledPin;
     auto cfg = _flash->getConfigs();
 
-    strncpy(cfg.NetCfg.SSID, _server->arg("ssid").c_str(), 19);
-    strncpy(cfg.NetCfg.Password, _server->arg("passwd").c_str(), 19);
+    strncpy(cfg->NetCfg.SSID, _server->arg("ssid").c_str(), 19);
+    strncpy(cfg->NetCfg.Password, _server->arg("passwd").c_str(), 19);
     if (_server->arg("ap") == "true")
-        cfg.NetCfg.IsConnectAP = false;
+        cfg->NetCfg.IsConnectAP = false;
     else
-        cfg.NetCfg.IsConnectAP = true;
+        cfg->NetCfg.IsConnectAP = true;
     if (_server->arg("inverted") == "true")
-        cfg.NetCfg.IsInverted = true;
+        cfg->NetCfg.IsInverted = true;
     else
-        cfg.NetCfg.IsInverted = false;
+        cfg->NetCfg.IsInverted = false;
     if (_server->arg("enabled") == "true")
-        cfg.NetCfg.IsLedEnabled = true;
+        cfg->NetCfg.IsLedEnabled = true;
     else
-        cfg.NetCfg.IsLedEnabled = false;
+        cfg->NetCfg.IsLedEnabled = false;
 
     ledPin = _gpio->strToPin(_server->arg("gpio"));
-    cfg.NetCfg.StatusLED.Addr = ledPin.Addr;
-    cfg.NetCfg.StatusLED.Type = ledPin.Type;
-    cfg.NetCfg.StatusLED.Pin = ledPin.Pin;
+    cfg->NetCfg.StatusLED.Addr = ledPin.Addr;
+    cfg->NetCfg.StatusLED.Type = ledPin.Type;
+    cfg->NetCfg.StatusLED.Pin = ledPin.Pin;
 
     if (_flash->saveData())
         doc["result"] = true;

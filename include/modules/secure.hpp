@@ -65,7 +65,8 @@ typedef struct _SecureRemoteDev
 typedef enum _SecureRemoteCmd
 {
     SECURE_REMOTE_ARM_CMD,
-    SECURE_REMOTE_ALARM_CMD
+    SECURE_REMOTE_ALARM_CMD,
+    SECURE_REMOTE_LIGHT_ON_CMD
 } SecureRemoteCmd;
 #endif /* SECURE_MOD */
 
@@ -84,7 +85,6 @@ public:
     virtual String getLastKey() = 0;
     virtual void setInvertAlarm(bool inverted) = 0;
     virtual bool getInvertAlarm(void) = 0;
-    virtual void addSensor(const SecureSensor& sensor) = 0;
     virtual void addKey(const String &key) = 0;
     virtual void clearKeys() = 0;
     virtual String typeToStr(SecureType sensType) = 0;
@@ -93,8 +93,8 @@ public:
     virtual std::vector<String>& getKeys() = 0;
     virtual void getTypes(std::vector<String> &types) = 0;
     virtual bool verifyKey(const String &key) = 0;
-    virtual void addRemoteDevice(const SecureRemoteDev &dev) = 0;
     virtual std::vector<SecureRemoteDev>& getRemoteDevices() = 0;
+    virtual std::vector<SecureRemoteDev>& getLightDevices() = 0;
     virtual bool saveStates() = 0;
     virtual void loadStates() = 0;
     virtual bool getMaster() = 0;
@@ -197,13 +197,6 @@ public:
     bool getInvertAlarm(void);
 
     /**
-     * @brief Add new Sensor object
-     * 
-     * @param sensor Secure sensor
-     */
-    void addSensor(const SecureSensor& sensor);
-
-    /**
      * @brief Add new security key
      * 
      * @param key Add iButton serial number
@@ -268,18 +261,18 @@ public:
     bool verifyKey(const String &key);
 
     /**
-     * @brief Add new remote security module
-     * 
-     * @param dev Security module
-     */
-    void addRemoteDevice(const SecureRemoteDev &dev);
-
-    /**
      * @brief Get the Remote Devices modules
      * 
      * @return std::vector<SecureRemoteDev>& 
      */
     std::vector<SecureRemoteDev>& getRemoteDevices();
+
+    /**
+     * @brief Get the Light Devices modules
+     * 
+     * @return std::vector<SecureRemoteDev>& 
+     */
+    std::vector<SecureRemoteDev>& getLightDevices();
 
     /**
      * @brief Get master status of module
@@ -316,6 +309,7 @@ private:
     std::vector<SecureSensor> _sensors;
     std::vector<String> _keys;
     std::vector<SecureRemoteDev> _remote;
+    std::vector<SecureRemoteDev> _light;
     OneWire _oneWire;
     String _lastKey = "None";
     bool _master = false;
@@ -324,6 +318,9 @@ private:
     void handleKey();
     void runAlarm(const SecureSensor& sensor);
     bool sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status);
+    void addRemoteDevice(const SecureRemoteDev &dev);
+    void addLightDevice(const SecureRemoteDev &dev);
+    void addSensor(const SecureSensor& sensor);
 #endif /* SECURE_MOD */
 };
 

@@ -59,7 +59,7 @@ void EspSmartThing::startApp()
      * 
      */
 
-    const auto& led = cfg.NetCfg.StatusLED;
+    const auto& led = cfg->NetCfg.StatusLED;
 
     const auto& gpioPin = GpioPin
     {
@@ -68,11 +68,11 @@ void EspSmartThing::startApp()
         Pin: led.Pin
     };
 
-    _net->setStatusLed(cfg.NetCfg.IsLedEnabled, gpioPin, cfg.NetCfg.IsInverted);
-    if (cfg.NetCfg.IsConnectAP)
+    _net->setStatusLed(cfg->NetCfg.IsLedEnabled, gpioPin, cfg->NetCfg.IsInverted);
+    if (cfg->NetCfg.IsConnectAP)
     {
-        _log->info("EST", "Connecting to AP: \"" + String(cfg.NetCfg.SSID) + "\"");
-        if (_net->connectToAP(cfg.NetCfg.SSID, cfg.NetCfg.Password)) {
+        _log->info("EST", "Connecting to AP: \"" + String(cfg->NetCfg.SSID) + "\"");
+        if (_net->connectToAP(cfg->NetCfg.SSID, cfg->NetCfg.Password)) {
             _log->info("EST", "Connected successful. IP: " + _net->getIP());
         } else {
             _log->error("EST", "Failed to connect to AP.");
@@ -86,7 +86,7 @@ void EspSmartThing::startApp()
 
 #ifdef SMS_NOTIFY_MOD
     _log->info("EST", "Starting SMS notifier");
-    _sms->setCreds(cfg.SmsCfg.Token, cfg.SmsCfg.Phone);
+    _sms->setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
 #endif
 #ifdef TELEGRAM_NOTIFY_MOD
     _log->info("EST", "Starting Telegram notifier");

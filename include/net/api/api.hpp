@@ -49,6 +49,10 @@
 #define API_SECURE_ALARM        "/api/v1/secure/alarm"
 #endif
 
+#if defined(SECURE_MOD) || defined(LIGHT_MOD)
+#define API_LIGHT_ALL   "/api/v1/light/all"
+#endif
+
 class IApi
 {
 public:

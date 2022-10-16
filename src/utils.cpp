@@ -25,3 +25,8 @@ void HexArrayToStr(uint8_t* arr, size_t size, char out[])
     }
     out[size * 2] = '\0';
 }
+
+String BoolToStr(bool value)
+{
+    return (value == true) ? "true" : "false";
+}

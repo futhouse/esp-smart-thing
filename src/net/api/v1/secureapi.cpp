@@ -41,7 +41,7 @@ void SecureApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 void SecureApi::secInfoHandler()
 {
     String out = "";
-    DynamicJsonDocument doc(2024);
+    DynamicJsonDocument doc(3024);
 
     doc["armed"] = _secure->getArmed();
     doc["alarm"] = _secure->getAlarm();
@@ -74,6 +74,12 @@ void SecureApi::secInfoHandler()
         doc["remote"][i]["enabled"] = remote[i].Enabled;
     }
 
+    const auto light = _secure->getLightDevices();
+    for (uint8_t i = 0; i < light.size(); i++) {
+        doc["light"][i]["ip"] = light[i].IP;
+        doc["light"][i]["enabled"] = light[i].Enabled;
+    }
+
     doc["master"] = _secure->getMaster();
 
     serializeJson(doc, out);
@@ -98,7 +104,7 @@ void SecureApi::secTypesHandler()
 void SecureApi::secConfHandler()
 {
     String out = "";
-    DynamicJsonDocument doc(2024);
+    DynamicJsonDocument doc(3024);
     DynamicJsonDocument doco(1024);
 
     deserializeJson(doc, _server->arg(0));
@@ -125,6 +131,13 @@ void SecureApi::secConfHandler()
         auto& remDev = _secure->getRemoteDevices()[i];
         remDev.IP = static_cast<String>(remote[i]["ip"]);
         remDev.Enabled = static_cast<bool>(remote[i]["enabled"]);
+    }
+
+    JsonArray light = static_cast<JsonArray>(doc["light"]);
+    for (uint8_t i = 0; i < light.size(); i++) {
+        auto& remDev = _secure->getLightDevices()[i];
+        remDev.IP = static_cast<String>(light[i]["ip"]);
+        remDev.Enabled = static_cast<bool>(light[i]["enabled"]);
     }
 
     _secure->setMaster(static_cast<bool>(doc["master"]));

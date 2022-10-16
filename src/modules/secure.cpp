@@ -180,6 +180,15 @@ void Secure::setAlarm(bool status)
                 }
             }
         }
+        for (uint8_t i = 0; i < _light.size(); i++) {
+            if (_light[i].Enabled && (_light[i].IP != "")) {
+                if (sendRemoteStatus(SECURE_REMOTE_LIGHT_ON_CMD, _light[i].IP, status)) {
+                    _log->info("SECURE", "Send Light ON:\""+String(status)+"\" to remote dev IP: \""+_light[i].IP+"\"");
+                } else {
+                    _log->error("SECURE", "Failed to send Light ON to remote dev IP: \""+_light[i].IP+"\"");
+                }
+            }
+        }
     }
 }
 
@@ -264,7 +273,7 @@ void Secure::runAlarm(const SecureSensor& sensor)
 
     auto cfg = _flash->getConfigs();
 
-    notify = String(cfg.DevName) + ": Sensor \"" + sensor.Name + "\"";
+    notify = String(cfg->DevName) + ": Sensor \"" + sensor.Name + "\"";
     switch (sensor.Type)
     {
         case SECURE_REEDSWITCH_TYPE:
@@ -326,41 +335,41 @@ bool Secure::saveStates()
 
     auto cfg = _flash->getConfigs();
 
-    cfg.SecureCfg.Armed = _armed;
-    cfg.SecureCfg.Alarm = _alarm;
-    cfg.SecureCfg.InvertedAlarm = _invertAlarm;
+    cfg->SecureCfg.Armed = _armed;
+    cfg->SecureCfg.Alarm = _alarm;
+    cfg->SecureCfg.InvertedAlarm = _invertAlarm;
 
-    cfg.SecureCfg.AlarmPin = {
+    cfg->SecureCfg.AlarmPin = {
         Type: static_cast<uint8_t>(_pinAlarm.Type),
         Addr: _pinAlarm.Addr,
         Pin: _pinAlarm.Pin
     };
 
-    cfg.SecureCfg.KeyPin = {
+    cfg->SecureCfg.KeyPin = {
         Type: static_cast<uint8_t>(_pinKey.Type),
         Addr: _pinKey.Addr,
         Pin: _pinKey.Pin
     };
 
-    cfg.SecureCfg.LedPin = {
+    cfg->SecureCfg.LedPin = {
         Type: static_cast<uint8_t>(_pinLed.Type),
         Addr: _pinLed.Addr,
         Pin: _pinLed.Pin
     };
 
     for (uint8_t i = 0; i < _keys.size(); i++) {
-        strncpy(cfg.SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN - 1);
-        cfg.SecureCfg.Keys[i][CONFIG_SECURE_KEY_LEN - 1] = '\0';
+        strncpy(cfg->SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN - 1);
+        cfg->SecureCfg.Keys[i][CONFIG_SECURE_KEY_LEN - 1] = '\0';
     }
 
     for (uint8_t i = 0; i < _sensors.size(); i++) {
-        strncpy(cfg.SecureCfg.Sensors[i].Name, _sensors[i].Name.c_str(), 10);
-        cfg.SecureCfg.Sensors[i].Enabled = _sensors[i].Enabled;
-        cfg.SecureCfg.Sensors[i].Sms = _sensors[i].Sms;
-        cfg.SecureCfg.Sensors[i].Telegram = _sensors[i].Telegram;
-        cfg.SecureCfg.Sensors[i].Type = _sensors[i].Type;
-        cfg.SecureCfg.Sensors[i].Alarm = _sensors[i].Alarm;
-        cfg.SecureCfg.Sensors[i].Pin = {
+        strncpy(cfg->SecureCfg.Sensors[i].Name, _sensors[i].Name.c_str(), 10);
+        cfg->SecureCfg.Sensors[i].Enabled = _sensors[i].Enabled;
+        cfg->SecureCfg.Sensors[i].Sms = _sensors[i].Sms;
+        cfg->SecureCfg.Sensors[i].Telegram = _sensors[i].Telegram;
+        cfg->SecureCfg.Sensors[i].Type = _sensors[i].Type;
+        cfg->SecureCfg.Sensors[i].Alarm = _sensors[i].Alarm;
+        cfg->SecureCfg.Sensors[i].Pin = {
             Type: static_cast<uint8_t>(_sensors[i].Pin.Type),
             Addr: _sensors[i].Pin.Addr,
             Pin: _sensors[i].Pin.Pin
@@ -368,12 +377,18 @@ bool Secure::saveStates()
     }
 
     for (uint8_t i = 0; i < _remote.size(); i++) {
-        strncpy(cfg.SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN);
-        cfg.SecureCfg.Remote[i].IP[CONFIG_IP_LEN - 1] = '\0';
-        cfg.SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
+        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN - 1);
+        cfg->SecureCfg.Remote[i].IP[CONFIG_IP_LEN - 1] = '\0';
+        cfg->SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
     }
 
-    cfg.SecureCfg.Master = getMaster();
+    for (uint8_t i = 0; i < _light.size(); i++) {
+        strncpy(cfg->SecureCfg.Light[i].IP, _light[i].IP.c_str(), CONFIG_IP_LEN - 1);
+        cfg->SecureCfg.Light[i].IP[CONFIG_IP_LEN - 1] = '\0';
+        cfg->SecureCfg.Light[i].Enabled = _light[i].Enabled;
+    }
+
+    cfg->SecureCfg.Master = getMaster();
 
     return _flash->saveData();
 }
@@ -382,9 +397,10 @@ void Secure::loadStates()
 {
     _log->info("SECURE", "Loading Security configs");
 
-    auto& secCfg = _flash->getConfigs().SecureCfg;
+    auto& secCfg = _flash->getConfigs()->SecureCfg;
 
     _keys.clear();
+    _light.clear();
     _sensors.clear();
     _remote.clear();
     _lastKey = "None";
@@ -451,6 +467,10 @@ void Secure::loadStates()
             IP: String(secCfg.Remote[i].IP),
             Enabled: secCfg.Remote[i].Enabled
         });
+        addLightDevice({
+            IP: String(secCfg.Light[i].IP),
+            Enabled: secCfg.Light[i].Enabled
+        });
     }
 
     setMaster(secCfg.Master);
@@ -473,9 +493,19 @@ void Secure::addRemoteDevice(const SecureRemoteDev &dev)
     _remote.push_back(dev);
 }
 
+void Secure::addLightDevice(const SecureRemoteDev &dev)
+{
+    _light.push_back(dev);
+}
+
 std::vector<SecureRemoteDev>& Secure::getRemoteDevices()
 {
     return _remote;
+}
+
+std::vector<SecureRemoteDev>& Secure::getLightDevices()
+{
+    return _light;
 }
 
 bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status)
@@ -484,12 +514,17 @@ bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status
 
     if (cmd == SECURE_REMOTE_ARM_CMD) {
         NetRequest req(API_SECURE_ARM);
-        req.setArg("status", (status == true) ? "true" : "false");
+        req.setArg("status", BoolToStr(status));
         return client.getRequest(req);
     }
     else if (cmd == SECURE_REMOTE_ALARM_CMD) {
         NetRequest req(API_SECURE_ALARM);
-        req.setArg("status", (status == true) ? "true" : "false");
+        req.setArg("status", BoolToStr(status));
+        return client.getRequest(req);
+    }
+    else if (cmd == SECURE_REMOTE_LIGHT_ON_CMD) {
+        NetRequest req(API_LIGHT_ALL);
+        req.setArg("status", BoolToStr(status));
         return client.getRequest(req);
     }
 

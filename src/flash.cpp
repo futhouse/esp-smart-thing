@@ -38,9 +38,9 @@ bool Flash::saveData()
     return EEPROM.commit();
 }
 
-Configs& Flash::getConfigs()
+Configs* Flash::getConfigs()
 {
-    return _cfg;
+    return &_cfg;
 }
 
 size_t Flash::getConfigSize()

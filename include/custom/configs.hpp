@@ -115,6 +115,7 @@ typedef struct _SecureConfigs
     char                Keys[CONFIG_SECURE_KEYS_COUNT][CONFIG_SECURE_KEY_LEN];
     bool                Master;
     RemoteDev           Remote[CONFIG_SECURE_REMOTE_COUNT];
+    RemoteDev           Light[CONFIG_SECURE_REMOTE_COUNT];
 } SecureConfigs;
 #endif
 

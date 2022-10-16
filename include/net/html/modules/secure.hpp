@@ -217,34 +217,80 @@ const PROGMEM char secHtml[] = R"=====(
                     </td>
                 </tr>
                 <tr>
-                    <td align='center'><b>#</b></td>
-                    <td align='center'><b>IP</b></td>
-                    <td align='center'><b>Enabled</b></td>
-                </tr>
-                <tr align='center'>
-                    <td><a>1</a></td>
-                    <td><input type='edit' id='rmip0' /></td>
-                    <td><input type='checkbox' id='rmen0' onclick='DisableElements()' /></td>
-                </tr>
-                <tr align='center'>
-                    <td><a>2</a></td>
-                    <td><input type='edit' id='rmip1' /></td>
-                    <td><input type='checkbox' id='rmen1' onclick='DisableElements()' /></td>
-                </tr>
-                <tr align='center'>
-                    <td><a>3</a></td>
-                    <td><input type='edit' id='rmip2' /></td>
-                    <td><input type='checkbox' id='rmen2' onclick='DisableElements()' /></td>
-                </tr>
-                <tr align='center'>
-                    <td><a>4</a></td>
-                    <td><input type='edit' id='rmip3' /></td>
-                    <td><input type='checkbox' id='rmen3' onclick='DisableElements()' /></td>
-                </tr>
-                <tr align='center'>
-                    <td><a>5</a></td>
-                    <td><input type='edit' id='rmip4' /></td>
-                    <td><input type='checkbox' id='rmen4' onclick='DisableElements()' /></td>
+                    <td>
+                        <table border='0' cellpadding='4' cellspacing='0'>
+                            <td colspan="3" align='center'>
+                                <font color='green'><h3>Security</h3></font>
+                            </td>
+                            <tr>
+                                <td align='center'><b>#</b></td>
+                                <td align='center'><b>IP</b></td>
+                                <td align='center'><b>Enabled</b></td>
+                            </tr>
+                            <tr align='center'>
+                                <td><a>1</a></td>
+                                <td><input type='edit' id='rmip0' /></td>
+                                <td><input type='checkbox' id='rmen0' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td><a>2</a></td>
+                                <td><input type='edit' id='rmip1' /></td>
+                                <td><input type='checkbox' id='rmen1' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td><a>3</a></td>
+                                <td><input type='edit' id='rmip2' /></td>
+                                <td><input type='checkbox' id='rmen2' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td><a>4</a></td>
+                                <td><input type='edit' id='rmip3' /></td>
+                                <td><input type='checkbox' id='rmen3' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td><a>5</a></td>
+                                <td><input type='edit' id='rmip4' /></td>
+                                <td><input type='checkbox' id='rmen4' onclick='DisableElements()' /></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        <table border='0' cellpadding='4' cellspacing='0'>
+                            <td colspan="3" align='center'>
+                                <font color='green'><h3>Light</h3></font>
+                            </td>
+                            <tr>
+                                <td align='center'></td>
+                                <td align='center'><b>IP</b></td>
+                                <td align='center'><b>Enabled</b></td>
+                            </tr>
+                            <tr align='center'>
+                                <td align='center'></td>
+                                <td><input type='edit' id='rmlip0' /></td>
+                                <td><input type='checkbox' id='rmlen0' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td align='center'></td>
+                                <td><input type='edit' id='rmlip1' /></td>
+                                <td><input type='checkbox' id='rmlen1' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td align='center'></td>
+                                <td><input type='edit' id='rmlip2' /></td>
+                                <td><input type='checkbox' id='rmlen2' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td align='center'></td>
+                                <td><input type='edit' id='rmlip3' /></td>
+                                <td><input type='checkbox' id='rmlen3' onclick='DisableElements()' /></td>
+                            </tr>
+                            <tr align='center'>
+                                <td align='center'></td>
+                                <td><input type='edit' id='rmlip4' /></td>
+                                <td><input type='checkbox' id='rmlen4' onclick='DisableElements()' /></td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
             </table>
             <table border='0' cellpadding='4' cellspacing='0'>
@@ -384,6 +430,13 @@ const PROGMEM char secHtml[] = R"=====(
                         edName.value = json.remote[i].ip
                         cbEnable.checked = json.remote[i].enabled
                     }
+                    for (let i = 0; i < json.light.length; i++) {
+                        let edName = document.querySelector("#rmlip"+i);
+                        let cbEnable = document.querySelector("#rmlen"+i);
+
+                        edName.value = json.light[i].ip
+                        cbEnable.checked = json.light[i].enabled
+                    }
                     if (json.master) {
                         cbMaster.checked = true
                         cbSlave.checked = false
@@ -437,13 +490,19 @@ const PROGMEM char secHtml[] = R"=====(
             for (let i = 0; i < 5; i++) {
                 let edName = document.querySelector("#rmip"+i);
                 let cbEnable = document.querySelector("#rmen"+i);
+                let edLightName = document.querySelector("#rmlip"+i);
+                let cbLightEnable = document.querySelector("#rmlen"+i);
 
                 if (cbMaster.checked) {
                     edName.disabled = !cbEnable.checked
                     cbEnable.disabled = false
+                    edLightName.disabled = !cbLightEnable.checked
+                    cbLightEnable.disabled = false
                 } else {
                     edName.disabled = true
                     cbEnable.disabled = true
+                    edLightName.disabled = true
+                    cbLightEnable.disabled = true
                 }
             }
             for (let i = 0; i < 10; i++) {
@@ -472,13 +531,20 @@ const PROGMEM char secHtml[] = R"=====(
             let cbMaster = document.querySelector("#master");
 
             let remote = []
+            let light = []
             for (let i = 0; i < 5; i++) {
                 let edName = document.querySelector("#rmip"+i);
                 let cbEnable = document.querySelector("#rmen"+i);
+                let edLightName = document.querySelector("#rmlip"+i);
+                let cbLightEnable = document.querySelector("#rmlen"+i);
 
                 remote.push({
                     "ip": edName.value,
                     "enabled": cbEnable.checked
+                });
+                light.push({
+                    "ip": edLightName.value,
+                    "enabled": cbLightEnable.checked
                 });
             }
 
@@ -512,6 +578,7 @@ const PROGMEM char secHtml[] = R"=====(
                 },
                 "sensors": sensors,
                 "remote": remote,
+                "light": light,
                 "master": cbMaster.checked
             }
 
