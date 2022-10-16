@@ -19,22 +19,25 @@
 
 #include "custom/modules.hpp"
 #include "modules/core/telegram.hpp"
-#include "flash.hpp"
 #include "net/espsrv.hpp"
 #include "../api.hpp"
 
 class TelegramApi: public IApi
 {
 public:
-    TelegramApi(const std::shared_ptr<IFlash>& flash,
-                const std::shared_ptr<ITelegram>& tg);
+    TelegramApi(const std::shared_ptr<ITelegram>& tg);
 
+    /**
+     * @brief Register new web handler
+     * 
+     * @param server 
+     */
     void registerHandlers(const std::shared_ptr<EspServer> &server);
 
 private:
-    const std::shared_ptr<IFlash> _flash;
     const std::shared_ptr<ITelegram> _tg;
     std::shared_ptr<EspServer> _server;
+
 #ifdef TELEGRAM_NOTIFY_MOD
     void tgInfoHandler();
     void tgConfHandler();

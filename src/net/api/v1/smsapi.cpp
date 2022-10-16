@@ -10,10 +10,7 @@
 #include "net/html/modules/core/sms.hpp"
 #include "net/html/misc.hpp"
 
-SmsApi::SmsApi(const std::shared_ptr<IFlash>& flash,
-                         const std::shared_ptr<ISms>& sms
-                        ):
-    _flash(move(flash)),
+SmsApi::SmsApi(const std::shared_ptr<ISms>& sms):
     _sms(move(sms))
 {
 }
@@ -35,10 +32,9 @@ void SmsApi::smsInfoHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
-    auto cfg = _flash->getConfigs();
 
-    doc["token"] = String(cfg->SmsCfg.Token);
-    doc["phone"] = String(cfg->SmsCfg.Phone);
+    doc["token"] = _sms->getToken();
+    doc["phone"] = _sms->getPhone();
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
@@ -48,13 +44,11 @@ void SmsApi::smsConfHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
-    auto cfg = _flash->getConfigs();
 
-    strncpy(cfg->SmsCfg.Token, _server->arg("token").c_str(), 38);
-    strncpy(cfg->SmsCfg.Phone, _server->arg("phone").c_str(), 13);
-    _sms->setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
-
-    doc["result"] = _flash->saveData();
+    _sms->setCreds(_server->arg("token"),  _server->arg("phone"));
+    
+    doc["result"] = _sms->saveStates();
+    _sms->loadStates();
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 

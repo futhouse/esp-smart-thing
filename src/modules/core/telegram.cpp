@@ -63,8 +63,11 @@ bool Telegram::sendNotify(const String &msg)
     return true;
 }
 
+#endif /* TELEGRAM_NOTIFY_MOD */
+
 bool Telegram::saveStates()
 {
+#ifdef TELEGRAM_NOTIFY_MOD
     _log->info("TELEGRAM", "Saving Telegram configs");
 
     auto cfg = _flash->getConfigs();
@@ -80,10 +83,14 @@ bool Telegram::saveStates()
     }
 
     return _flash->saveData();
+#else
+    return false;
+#endif
 }
 
 void Telegram::loadStates()
 {
+#ifdef TELEGRAM_NOTIFY_MOD
     auto& tgCfg = _flash->getConfigs()->TelegramCfg;
 
     _log->info("TELEGRAM", "Loading Telegram configs");
@@ -106,6 +113,5 @@ void Telegram::loadStates()
             _log->info("TELEGRAM", "Add new user ChatID: \"" + String(user.ChatID) + "\"");
         }
     }
+#endif
 }
-
-#endif /* TELEGRAM_NOTIFY_MOD */

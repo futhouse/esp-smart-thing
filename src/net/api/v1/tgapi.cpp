@@ -10,10 +10,8 @@
 #include "net/html/modules/core/telegram.hpp"
 #include "net/html/misc.hpp"
 
-TelegramApi::TelegramApi(const std::shared_ptr<IFlash>& flash,
-                         const std::shared_ptr<ITelegram>& tg
+TelegramApi::TelegramApi(const std::shared_ptr<ITelegram>& tg
                         ):
-    _flash(move(flash)),
     _tg(move(tg))
 {
 }

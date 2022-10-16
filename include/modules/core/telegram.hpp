@@ -18,6 +18,7 @@
 #include "custom/modules.hpp"
 #include "flash.hpp"
 #include "logger.hpp"
+#include "modules/module.hpp"
 
 #include <Arduino.h>
 #include <vector>
@@ -31,7 +32,7 @@ typedef struct _TelegramUser
     bool        Enabled;
 } TelegramUser;
 
-class ITelegram
+class ITelegram : public Module
 {
 #ifdef TELEGRAM_NOTIFY_MOD
 public:
@@ -50,6 +51,20 @@ class Telegram : public ITelegram
 public:
     Telegram(const std::shared_ptr<ILogger>& log,
             const std::shared_ptr<IFlash>& flash);
+
+    /**
+     * @brief Save states to EEPROM
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool saveStates();
+
+    /**
+     * @brief Loading states from EEPROM
+     * 
+     */
+    void loadStates();
 
 #ifdef TELEGRAM_NOTIFY_MOD
     /**
@@ -88,20 +103,6 @@ public:
      * @return false 
      */
     bool sendNotify(const String &msg);
-
-    /**
-     * @brief Save states to EEPROM
-     * 
-     * @return true 
-     * @return false 
-     */
-    bool saveStates();
-
-    /**
-     * @brief Loading states from EEPROM
-     * 
-     */
-    void loadStates();
 
 #endif /* TELEGRAM_NOTIFY_MOD */
 private:

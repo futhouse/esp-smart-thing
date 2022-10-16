@@ -15,6 +15,11 @@
 #include "modules/core/sms.hpp"
 #include "net/client.hpp"
 
+Sms::Sms(const std::shared_ptr<IFlash>& flash):
+    _flash(std::move(flash))
+{
+}
+
 #ifdef SMS_NOTIFY_MOD
 
 void Sms::setCreds(const String &token, const String &phone)
@@ -46,3 +51,25 @@ const String& Sms::getToken()
 }
 
 #endif /* SMS_NOTIFY_MOD */
+
+bool Sms::saveStates()
+{
+#ifdef SMS_NOTIFY_MOD
+    auto cfg = _flash->getConfigs();
+
+    strncpy(cfg->SmsCfg.Token, _token.c_str(), CONFIG_SMS_TOKEN_LEN);
+    strncpy(cfg->SmsCfg.Phone, _phone.c_str(), CONFIG_SMS_PHONE_LEN);
+
+    return _flash->saveData();
+#else
+    return false
+#endif
+}
+
+void Sms::loadStates()
+{
+#ifdef SMS_NOTIFY_MOD
+    auto cfg = _flash->getConfigs();
+    setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
+#endif
+}

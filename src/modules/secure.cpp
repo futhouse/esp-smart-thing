@@ -197,7 +197,7 @@ bool Secure::getArmed()
     return _armed;
 }
 
-String Secure::getLastKey()
+String& Secure::getLastKey()
 {
     return _lastKey;
 }
@@ -358,7 +358,7 @@ bool Secure::saveStates()
     };
 
     for (uint8_t i = 0; i < _keys.size(); i++) {
-        strncpy(cfg->SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN - 1);
+        strncpy(cfg->SecureCfg.Keys[i], _keys[i].c_str(), CONFIG_SECURE_KEY_LEN);
         cfg->SecureCfg.Keys[i][CONFIG_SECURE_KEY_LEN - 1] = '\0';
     }
 
@@ -377,13 +377,13 @@ bool Secure::saveStates()
     }
 
     for (uint8_t i = 0; i < _remote.size(); i++) {
-        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN - 1);
+        strncpy(cfg->SecureCfg.Remote[i].IP, _remote[i].IP.c_str(), CONFIG_IP_LEN);
         cfg->SecureCfg.Remote[i].IP[CONFIG_IP_LEN - 1] = '\0';
         cfg->SecureCfg.Remote[i].Enabled = _remote[i].Enabled;
     }
 
     for (uint8_t i = 0; i < _light.size(); i++) {
-        strncpy(cfg->SecureCfg.Light[i].IP, _light[i].IP.c_str(), CONFIG_IP_LEN - 1);
+        strncpy(cfg->SecureCfg.Light[i].IP, _light[i].IP.c_str(), CONFIG_IP_LEN);
         cfg->SecureCfg.Light[i].IP[CONFIG_IP_LEN - 1] = '\0';
         cfg->SecureCfg.Light[i].Enabled = _light[i].Enabled;
     }

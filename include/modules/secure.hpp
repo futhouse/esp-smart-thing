@@ -19,6 +19,7 @@
 #include "gpio.hpp"
 #include "logger.hpp"
 #include "flash.hpp"
+#include "module.hpp"
 #include "modules/core/telegram.hpp"
 #include "modules/core/sms.hpp"
 
@@ -70,7 +71,7 @@ typedef enum _SecureRemoteCmd
 } SecureRemoteCmd;
 #endif /* SECURE_MOD */
 
-class ISecure
+class ISecure : public Module
 {
 #ifdef SECURE_MOD
 public:
@@ -82,7 +83,7 @@ public:
     virtual bool getAlarm() = 0;
     virtual void setAlarm(bool status) = 0;
     virtual bool getArmed() = 0;
-    virtual String getLastKey() = 0;
+    virtual String& getLastKey() = 0;
     virtual void setInvertAlarm(bool inverted) = 0;
     virtual bool getInvertAlarm(void) = 0;
     virtual void addKey(const String &key) = 0;
@@ -174,7 +175,7 @@ public:
      * 
      * @return String Key
      */
-    String getLastKey();
+    String& getLastKey();
 
     /**
      * @brief Get the Types of security sensor

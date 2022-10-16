@@ -85,15 +85,15 @@ void EspSmartThing::startApp()
     }
 
 #ifdef SMS_NOTIFY_MOD
-    _log->info("EST", "Starting SMS notifier");
-    _sms->setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
+    _log->info("EST", "Starting SMS module");
+    _sms->loadStates();
 #endif
 #ifdef TELEGRAM_NOTIFY_MOD
-    _log->info("EST", "Starting Telegram notifier");
+    _log->info("EST", "Starting Telegram module");
     _tg->loadStates();
 #endif
 #ifdef SECURE_MOD
-    _log->info("EST", "Starting Security system");
+    _log->info("EST", "Starting Security module");
     _secure->setup();
     _secure->loadStates();
 #endif

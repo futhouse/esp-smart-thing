@@ -12,32 +12,16 @@
  *
  *****************************************************************************/
 
-#ifndef __SMS_API_HPP__
-#define __SMS_API_HPP__
+#ifndef __MODULE_HPP__
+#define __MODULE_HPP__
 
 #include <Arduino.h>
 
-#include "custom/modules.hpp"
-#include "modules/core/sms.hpp"
-#include "net/espsrv.hpp"
-#include "../api.hpp"
-
-class SmsApi: public IApi
+class Module
 {
 public:
-    SmsApi(const std::shared_ptr<ISms>& sms);
-
-    void registerHandlers(const std::shared_ptr<EspServer> &server);
-
-private:
-    const std::shared_ptr<ISms> _sms;
-    std::shared_ptr<EspServer> _server;
-#ifdef SMS_NOTIFY_MOD
-    void smsInfoHandler();
-    void smsConfHandler();
-    void smsTestHandler();
-    void smsHtmlHandler();
-#endif
+    virtual void loadStates() = 0;
+    virtual bool saveStates() = 0;
 };
 
-#endif /* __SMS_API_HPP__ */
+#endif /* __MODULE_HPP__ */

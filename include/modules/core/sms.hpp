@@ -16,10 +16,14 @@
 #define __SMS_HPP__
 
 #include "custom/modules.hpp"
+#include "modules/module.hpp"
+#include "flash.hpp"
 
 #include <Arduino.h>
+#include <functional>
+#include <memory>
 
-class ISms
+class ISms : public Module
 {
 #ifdef SMS_NOTIFY_MOD
 public:
@@ -32,8 +36,24 @@ public:
 
 class Sms : public ISms
 {
-#ifdef SMS_NOTIFY_MOD
 public:
+    Sms(const std::shared_ptr<IFlash>& flash);
+
+    /**
+     * @brief Saving states to EEPROM
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool saveStates();
+
+    /**
+     * @brief Loading states from EEPROM
+     * 
+     */
+    void loadStates();
+
+#ifdef SMS_NOTIFY_MOD
     /**
      * @brief Set the Creds: phone and token
      * 
@@ -64,8 +84,12 @@ public:
      * @return false 
      */
     bool sendMsg(const String &msg);
+#endif /* SMS_NOTIFY_MOD */
 
 private:
+    const std::shared_ptr<IFlash> _flash;
+
+#ifdef SMS_NOTIFY_MOD
     String _phone;
     String _token;
 #endif /* SMS_NOTIFY_MOD */
