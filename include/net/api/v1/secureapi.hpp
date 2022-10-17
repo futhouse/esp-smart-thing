@@ -47,7 +47,6 @@ private:
     void secArmHandler();
     void secAlarmHandler();
     void secClearKeysHandler();
-    void secAddKeyHandler();
 #endif
 };
 

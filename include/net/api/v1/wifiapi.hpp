@@ -22,12 +22,14 @@
 #include "net/espsrv.hpp"
 #include "../api.hpp"
 #include "gpio.hpp"
+#include "modules/network.hpp"
 
 class WifiApi: public IApi
 {
 public:
     WifiApi(const std::shared_ptr<IGpio> &gpio,
-            const std::shared_ptr<IFlash> &flash);
+            const std::shared_ptr<IFlash> &flash,
+            const std::shared_ptr<INetwork> &net);
 
     void registerHandlers(const std::shared_ptr<EspServer> &server);
 
@@ -35,6 +37,7 @@ private:
     const std::shared_ptr<IGpio> _gpio;
     const std::shared_ptr<IFlash> _flash;
     std::shared_ptr<EspServer> _server;
+    const std::shared_ptr<INetwork> _net;
 
     void wifiInfoHandler();
     void wifiHandler();

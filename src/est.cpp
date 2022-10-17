@@ -45,44 +45,19 @@ void EspSmartThing::startApp()
     _log->info("EST", "Flash Used bytes: " + String(_flash->getConfigSize()) +
                         " of " + String(FLASH_SIZE));
 
-    auto cfg = _flash->getConfigs();
-
     /**
      * @brief GPIO configuration
      * 
      */
-
     _gpio->setup();
 
     /**
      * @brief Network configuration
      * 
      */
-
-    const auto& led = cfg->NetCfg.StatusLED;
-
-    const auto& gpioPin = GpioPin
-    {
-        Type: static_cast<GpioType>(led.Type),
-        Addr: led.Addr,
-        Pin: led.Pin
-    };
-
-    _net->setStatusLed(cfg->NetCfg.IsLedEnabled, gpioPin, cfg->NetCfg.IsInverted);
-    if (cfg->NetCfg.IsConnectAP)
-    {
-        _log->info("EST", "Connecting to AP: \"" + String(cfg->NetCfg.SSID) + "\"");
-        if (_net->connectToAP(cfg->NetCfg.SSID, cfg->NetCfg.Password)) {
-            _log->info("EST", "Connected successful. IP: " + _net->getIP());
-        } else {
-            _log->error("EST", "Failed to connect to AP.");
-        }
-    }
-    else
-    {
-        _log->info("EST", "Starting new AP. SSID: \"" + String(CONFIG_DEFAULT_SSID) + "\"");
-        _net->startAP(CONFIG_DEFAULT_SSID);
-    }
+    _log->info("EST", "Starting Network module");
+    _net->loadStates();
+    _net->setup();
 
 #ifdef SMS_NOTIFY_MOD
     _log->info("EST", "Starting SMS module");

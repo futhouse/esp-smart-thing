@@ -21,7 +21,7 @@
 #include "flash.hpp"
 #include "net/espsrv.hpp"
 #include "../api.hpp"
-#include "net/network.hpp"
+#include "modules/network.hpp"
 
 class DeviceApi: public IApi
 {

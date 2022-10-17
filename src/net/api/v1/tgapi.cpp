@@ -37,7 +37,7 @@ void TelegramApi::tgInfoHandler()
     doc["token"] = _tg->getToken();
 
     auto users = _tg->getUsers();
-    for (uint8_t i = 0; i < users.size(); i++) {
+    for (uint8_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
         doc["users"][i]["chatid"] = users[i].ChatID;
         doc["users"][i]["notify"] = users[i].Notify;
         doc["users"][i]["bot"] = users[i].Bot;
@@ -58,11 +58,12 @@ void TelegramApi::tgConfHandler()
 
     auto users = static_cast<JsonArray>(doc["users"]);
     for (uint8_t i = 0; i < users.size(); i++) {
-        auto& user = _tg->getUsers()[i];
-        user.ChatID = static_cast<unsigned>(users[i]["chatid"]);
-        user.Notify = static_cast<bool>(users[i]["notify"]);
-        user.Bot = static_cast<bool>(users[i]["bot"]);
-        user.Enabled = static_cast<bool>(users[i]["enabled"]);
+        _tg->setUser(i, {
+            ChatID: static_cast<unsigned>(users[i]["chatid"]),
+            Notify: static_cast<bool>(users[i]["notify"]),
+            Bot: static_cast<bool>(users[i]["bot"]),
+            Enabled: static_cast<bool>(users[i]["enabled"])
+        });
     }
 
     doco["result"] = _tg->saveStates();

@@ -70,17 +70,33 @@ const PROGMEM char secHtml[] = R"=====(
                     <td align='left'><font color='blue'><a id="lastKey"></a></font></td>
                 </tr>
                 <tr align='center'>
-                    <td align='center' colspan="2"><select size="5" id='keys'></select></td>
+                    <td align='right'><b>#</b></td>
+                    <td align='center'><b>Key</b></td>
                 </tr>
-                <tr align='center'>
-                    <td align='right'><a>New Key:</a></td>
-                    <td align='left'><input type='edit' id='newKey' /></td>
+                <tr>
+                    <td align='right'><a>1</a></td>
+                    <td align='left'><input type='edit' id='key0' /></td>
+                </tr>
+                <tr>
+                    <td align='right'><a>2</a></td>
+                    <td align='left'><input type='edit' id='key1' /></td>
+                </tr>
+                <tr>
+                    <td align='right'><a>3</a></td>
+                    <td align='left'><input type='edit' id='key2' /></td>
+                </tr>
+                <tr>
+                    <td align='right'><a>4</a></td>
+                    <td align='left'><input type='edit' id='key3' /></td>
+                </tr>
+                <tr>
+                    <td align='right'><a>5</a></td>
+                    <td align='left'><input type='edit' id='key4' /></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'>
-                        <input type='button' onclick='AddKey()' value='Add Key'></input>
                     </td>
-                    <td align='left'>
+                    <td align='center'>
                         <input type='button' onclick='ClearKeys()' value='Clear Keys'></input>
                     </td>
                 </tr>
@@ -388,10 +404,8 @@ const PROGMEM char secHtml[] = R"=====(
                         }
                     }
                     for (let i = 0; i < json.keys.length; i++) {
-                        let op = document.createElement("option")
-                        op.value = json.keys[i]
-                        op.text = json.keys[i]
-                        keys.add(op)
+                        let edKey = document.querySelector("#key"+i);
+                        edKey.value = json.keys[i]
                     }
                     for (let i = 0; i < json.sensors.length; i++) {
                         let edName = document.querySelector("#name"+i);
@@ -460,20 +474,6 @@ const PROGMEM char secHtml[] = R"=====(
             })
         }
 
-        function AddKey() {
-            let edKey = document.querySelector("#newKey")
-            fetch('/api/v1/secure/key/add?'+ new URLSearchParams({
-                        key: edKey.value
-                    })).then(function(resp) {
-                return resp.json();
-            }).then(function(json) {
-                edKey.value = ""
-                if (json.result) {
-                    location.reload();
-                }
-            })
-        }
-
         function ClearKeys() {
             let edKey = document.querySelector("#newKey")
             fetch('/api/v1/secure/key/clear').then(function(resp) {
@@ -532,20 +532,26 @@ const PROGMEM char secHtml[] = R"=====(
 
             let remote = []
             let light = []
+            let keys = []
+
             for (let i = 0; i < 5; i++) {
                 let edName = document.querySelector("#rmip"+i);
                 let cbEnable = document.querySelector("#rmen"+i);
                 let edLightName = document.querySelector("#rmlip"+i);
                 let cbLightEnable = document.querySelector("#rmlen"+i);
+                let edKey = document.querySelector("#key"+i);
 
                 remote.push({
                     "ip": edName.value,
                     "enabled": cbEnable.checked
                 });
+
                 light.push({
                     "ip": edLightName.value,
                     "enabled": cbLightEnable.checked
                 });
+
+                keys.push(edKey.value)
             }
 
             let sensors = [];
@@ -579,7 +585,8 @@ const PROGMEM char secHtml[] = R"=====(
                 "sensors": sensors,
                 "remote": remote,
                 "light": light,
-                "master": cbMaster.checked
+                "master": cbMaster.checked,
+                "keys": keys
             }
 
             fetch("/api/v1/secure/conf", {

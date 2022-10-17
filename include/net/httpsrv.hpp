@@ -17,7 +17,7 @@
 
 #include <memory>
 
-#include "net/network.hpp"
+#include "modules/network.hpp"
 #include "net/espsrv.hpp"
 #include "logger.hpp"
 #include "gpio.hpp"

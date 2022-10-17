@@ -47,7 +47,9 @@ typedef struct _PinConfig
 
 typedef struct _NetConfig
 {
-    bool        IsConnectAP;
+    bool        IsStartAP;
+    char        ApSSID[CONFIG_STR_LEN];
+    char        ApPassword[CONFIG_STR_LEN];
     char        SSID[CONFIG_STR_LEN];
     char        Password[CONFIG_STR_LEN];
     PinConfig   StatusLED;

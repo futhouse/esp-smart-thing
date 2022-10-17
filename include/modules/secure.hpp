@@ -28,14 +28,17 @@
 #include <Arduino.h>
 #include <Ticker.h>
 #include <functional>
-#include <vector>
 #include <OneWire.h>
+
+#define SECURE_MAIN_DELAY_MS    1000
+#define SECURE_KEYS_DELAY_MS    500
 
 typedef enum _SecurePins
 {
     SECURE_ALARM_PIN,
     SECURE_KEY_PIN,
-    SECURE_LED_PIN
+    SECURE_LED_PIN,
+    SECURE_PIN_MAX
 } SecurePins;
 
 typedef enum _SecureType
@@ -44,6 +47,13 @@ typedef enum _SecureType
     SECURE_PIR_TYPE,
     SECURE_MICROWAVE_TYPE
 } SecureType;
+
+typedef enum _SecureRemoteCmd
+{
+    SECURE_REMOTE_ARM_CMD,
+    SECURE_REMOTE_ALARM_CMD,
+    SECURE_REMOTE_LIGHT_ON_CMD
+} SecureRemoteCmd;
 
 typedef struct _SecureSensor
 {
@@ -62,13 +72,6 @@ typedef struct _SecureRemoteDev
     String  IP;
     bool    Enabled;
 } SecureRemoteDev;
-
-typedef enum _SecureRemoteCmd
-{
-    SECURE_REMOTE_ARM_CMD,
-    SECURE_REMOTE_ALARM_CMD,
-    SECURE_REMOTE_LIGHT_ON_CMD
-} SecureRemoteCmd;
 #endif /* SECURE_MOD */
 
 class ISecure : public Module
@@ -86,20 +89,23 @@ public:
     virtual String& getLastKey() = 0;
     virtual void setInvertAlarm(bool inverted) = 0;
     virtual bool getInvertAlarm(void) = 0;
-    virtual void addKey(const String &key) = 0;
     virtual void clearKeys() = 0;
     virtual String typeToStr(SecureType sensType) = 0;
     virtual SecureType strToType(const String& str) = 0;
-    virtual std::vector<SecureSensor>& getSensors() = 0;
-    virtual std::vector<String>& getKeys() = 0;
+    virtual SecureSensor* getSensors() = 0;
+    virtual String* getKeys() = 0;
     virtual void getTypes(std::vector<String> &types) = 0;
     virtual bool verifyKey(const String &key) = 0;
-    virtual std::vector<SecureRemoteDev>& getRemoteDevices() = 0;
-    virtual std::vector<SecureRemoteDev>& getLightDevices() = 0;
+    virtual SecureRemoteDev* getRemoteDevices() = 0;
+    virtual SecureRemoteDev* getLightDevices() = 0;
     virtual bool saveStates() = 0;
     virtual void loadStates() = 0;
     virtual bool getMaster() = 0;
     virtual void setMaster(bool master) = 0;
+    virtual void setKey(size_t id, const String &key) = 0;
+    virtual void setSensor(size_t id, const SecureSensor &sens) = 0;
+    virtual void setRemote(size_t id, const SecureRemoteDev &dev) = 0;
+    virtual void setLight(size_t id, const SecureRemoteDev &dev) = 0;
 #endif /* SECURE_MOD */
 };
 
@@ -111,6 +117,7 @@ public:
            const std::shared_ptr<ITelegram>& tg,
            const std::shared_ptr<ISms>& sms,
            const std::shared_ptr<IFlash>& flash);
+
 #ifdef SECURE_MOD
     /**
      * @brief First initialization
@@ -198,13 +205,6 @@ public:
     bool getInvertAlarm(void);
 
     /**
-     * @brief Add new security key
-     * 
-     * @param key Add iButton serial number
-     */
-    void addKey(const String &key);
-
-    /**
      * @brief Remove all keys
      * 
      */
@@ -229,16 +229,16 @@ public:
     /**
      * @brief Get the Sensors object
      * 
-     * @return std::vector<SecureSensor>& 
+     * @return SecureSensor*
      */
-    std::vector<SecureSensor>& getSensors();
+    SecureSensor* getSensors();
 
     /**
      * @brief Get the Keys object
      * 
-     * @return std::vector<String>& 
+     * @return String*
      */
-    std::vector<String>& getKeys();
+    String* getKeys();
 
     /**
      * @brief Save states to EEPROM
@@ -264,16 +264,16 @@ public:
     /**
      * @brief Get the Remote Devices modules
      * 
-     * @return std::vector<SecureRemoteDev>& 
+     * @return SecureRemoteDev*
      */
-    std::vector<SecureRemoteDev>& getRemoteDevices();
+    SecureRemoteDev* getRemoteDevices();
 
     /**
      * @brief Get the Light Devices modules
      * 
-     * @return std::vector<SecureRemoteDev>& 
+     * @return SecureRemoteDev*
      */
-    std::vector<SecureRemoteDev>& getLightDevices();
+    SecureRemoteDev* getLightDevices();
 
     /**
      * @brief Get master status of module
@@ -290,6 +290,38 @@ public:
      */
     void setMaster(bool master);
 
+    /**
+     * @brief Set the Key object
+     * 
+     * @param id 
+     * @param key 
+     */
+    void setKey(size_t id, const String &key);
+
+    /**
+     * @brief Set the Sensor object
+     * 
+     * @param id 
+     * @param sens 
+     */
+    void setSensor(size_t id, const SecureSensor &sens);
+
+    /**
+     * @brief Set the Remote object
+     * 
+     * @param id 
+     * @param dev 
+     */
+    void setRemote(size_t id, const SecureRemoteDev &dev);
+
+    /**
+     * @brief Set the Light object
+     * 
+     * @param id 
+     * @param dev 
+     */
+    void setLight(size_t id, const SecureRemoteDev &dev);
+
 #endif /* SECURE_MOD */
 private:
     const std::shared_ptr<ILogger> _log;
@@ -299,29 +331,24 @@ private:
     const std::shared_ptr<IFlash> _flash;
 
 #ifdef SECURE_MOD
+    SecureSensor _sensors[CONFIG_SECURE_SENSORS_COUNT];
+    String _keys[CONFIG_SECURE_KEYS_COUNT];
+    SecureRemoteDev _remote[CONFIG_SECURE_REMOTE_COUNT];
+    SecureRemoteDev _light[CONFIG_SECURE_REMOTE_COUNT];
     Ticker _tickMain;
     Ticker _tickKey;
     bool _armed = false;
     bool _alarm = false;
     bool _invertAlarm = false;
-    GpioPin _pinAlarm;
-    GpioPin _pinKey;
-    GpioPin _pinLed;
-    std::vector<SecureSensor> _sensors;
-    std::vector<String> _keys;
-    std::vector<SecureRemoteDev> _remote;
-    std::vector<SecureRemoteDev> _light;
     OneWire _oneWire;
     String _lastKey = "None";
     bool _master = false;
+    GpioPin _pins[SECURE_PIN_MAX];
 
     void handleMain();
     void handleKey();
     void runAlarm(const SecureSensor& sensor);
     bool sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status);
-    void addRemoteDevice(const SecureRemoteDev &dev);
-    void addLightDevice(const SecureRemoteDev &dev);
-    void addSensor(const SecureSensor& sensor);
 #endif /* SECURE_MOD */
 };
 

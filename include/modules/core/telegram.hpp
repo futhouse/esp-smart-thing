@@ -38,8 +38,8 @@ class ITelegram : public Module
 public:
     virtual void setToken(const String &token) = 0;
     virtual String& getToken() = 0;
-    virtual void addUser(const TelegramUser &user) = 0;
-    virtual std::vector<TelegramUser>& getUsers() = 0;
+    virtual void setUser(size_t id, const TelegramUser &user) = 0;
+    virtual TelegramUser* getUsers() = 0;
     virtual bool sendNotify(const String &msg) = 0;
     virtual bool saveStates() = 0;
     virtual void loadStates() = 0;
@@ -86,14 +86,14 @@ public:
      * 
      * @param id 
      */
-    void addUser(const TelegramUser &usr);
+    void setUser(size_t id, const TelegramUser &usr);
 
     /**
      * @brief Get the users
      * 
-     * @return std::vector<TelegramUser> 
+     * @return TelegramUser*
      */
-    std::vector<TelegramUser>& getUsers();
+    TelegramUser* getUsers();
 
     /**
      * @brief Send Telegram Notify
@@ -110,7 +110,7 @@ private:
     const std::shared_ptr<IFlash> _flash;
 
 #ifdef TELEGRAM_NOTIFY_MOD
-    std::vector<TelegramUser> _users;
+    TelegramUser _users[CONFIG_TG_USERS_COUNT];
     String _token;
 #endif /* TELEGRAM_NOTIFY_MOD */
 };

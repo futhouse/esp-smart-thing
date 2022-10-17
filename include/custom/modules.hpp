@@ -21,6 +21,7 @@
  */
 
 #define TELEGRAM_NOTIFY_MOD
+#define TELEGRAM_BOT_MOD
 #define SMS_NOTIFY_MOD
 
 /**

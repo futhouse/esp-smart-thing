@@ -30,3 +30,8 @@ String BoolToStr(bool value)
 {
     return (value == true) ? "true" : "false";
 }
+
+bool StrToBool(const String& value)
+{
+    return (value == "true") ? true : false;
+}

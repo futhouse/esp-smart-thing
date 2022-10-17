@@ -14,7 +14,7 @@
 
 #include "logger.hpp"
 #include "flash.hpp"
-#include "net/network.hpp"
+#include "modules/network.hpp"
 #include "gpio.hpp"
 #include "net/httpsrv.hpp"
 #include "net/api/v1/secureapi.hpp"
@@ -36,11 +36,11 @@ const auto tg = std::make_shared<Telegram>(logger, flash);
 const auto dns = std::make_shared<DNSServer>();
 const auto espSrv = std::make_shared<EspServer>();
 const auto gpio = std::make_shared<Gpio>(logger);
-const auto net = std::make_shared<Network>(dns, gpio);
+const auto net = std::make_shared<Network>(dns, gpio, flash, logger);
 const auto sec = std::make_shared<Secure>(logger, gpio, tg, sms, flash);
 const auto apiGpio = std::make_shared<GpioApi>(gpio);
 const auto apiDev = std::make_shared<DeviceApi>(flash, net);
-const auto apiWifi = std::make_shared<WifiApi>(gpio, flash);
+const auto apiWifi = std::make_shared<WifiApi>(gpio, flash, net);
 const auto apiSms = std::make_shared<SmsApi>(sms);
 const auto apiTg = std::make_shared<TelegramApi>(tg);
 const auto apiSec = std::make_shared<SecureApi>(gpio, sec, flash);

@@ -19,7 +19,7 @@
 
 #include "logger.hpp"
 #include "flash.hpp"
-#include "net/network.hpp"
+#include "modules/network.hpp"
 #include "net/httpsrv.hpp"
 #include "gpio.hpp"
 

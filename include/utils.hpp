@@ -34,4 +34,13 @@ void HexArrayToStr(uint8_t* arr, size_t size, char out[]);
  */
 String BoolToStr(bool value);
 
+/**
+ * @brief Convert String to boolean
+ * 
+ * @param value String value
+ * @return true 
+ * @return false 
+ */
+bool StrToBool(const String& value);
+
 #endif /* __UTILS_HPP__ */

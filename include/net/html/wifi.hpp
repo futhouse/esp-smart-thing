@@ -39,22 +39,22 @@ const PROGMEM char wifiHtml[] = R"=====(
                 </tr>
                 <tr align='center'>
                     <td align='right'><a>SSID:</a></td>
-                    <td align='left'><font color='blue'><b>EspSmartThing</b></font></td>
+                    <td align='left'><input type='edit' id='ap_ssid' /></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'>Password:</td>
-                    <td align='left'><font color='blue'><b>-</b></font></td>
+                    <td align='left'><input type='password' id='ap_passwd' /></td>
                 </tr>
                 <tr>
                     <td colspan='2' align='center'><font color='#800080'><h2>Connect to AP</h2></font></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'><a>SSID:</a></td>
-                    <td align='left'><font color='blue'><input type='edit' id='ssid' /></font></td>
+                    <td align='left'><input type='edit' id='ssid' /></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'>Password:</td>
-                    <td align='left'><font color='blue'><input type='password' id='passwd' /></td>
+                    <td align='left'><input type='password' id='passwd' /></td>
                 </tr>
                 <tr>
                     <td colspan='2' align='center'><font color='#800080'><h2>Status LED</h2></font></td>
@@ -85,16 +85,18 @@ const PROGMEM char wifiHtml[] = R"=====(
         </center>
     </body>
     <script>
-        window.onload = function() {
+        window.onload = async function() {
             let ssid = document.querySelector('#ssid')
             let passwd = document.querySelector('#passwd')
+            let ap_ssid = document.querySelector('#ap_ssid')
+            let ap_passwd = document.querySelector('#ap_passwd')
             let master = document.querySelector('#master')
             let slave = document.querySelector('#slave')
             let statusLed = document.querySelector('#StatusLed')
             let enabledLed = document.querySelector('#EnabledLed')
             let invertedLed = document.querySelector('#InvertedLed')
 
-            fetch('/api/v1/gpio/info').then(function(resp) {
+            await fetch('/api/v1/gpio/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     for (let i = 0; i < json.length; i++) {
@@ -105,17 +107,19 @@ const PROGMEM char wifiHtml[] = R"=====(
                     }
                 })
 
-            fetch('/api/v1/wifi/info').then(function(resp) {
+            await fetch('/api/v1/wifi/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
                     ssid.value = json.ssid
                     passwd.value = json.passwd
+                    ap_ssid.value = json.ap_ssid
+                    ap_passwd.value = json.ap_passwd
                     if (json.ap) {
-                        master.checked = true
-                        slave.checked = false
-                    } else {
                         master.checked = false
                         slave.checked = true
+                    } else {
+                        master.checked = true
+                        slave.checked = false
                     }
                     invertedLed.checked = json.inverted
                     enabledLed.checked = json.enabled
@@ -135,6 +139,8 @@ const PROGMEM char wifiHtml[] = R"=====(
         function DisableElements() {
             let edSsid = document.querySelector('#ssid')
             let edPasswd = document.querySelector('#passwd')
+            let edApSsid = document.querySelector('#ap_ssid')
+            let edApPasswd = document.querySelector('#ap_passwd')
             let master = document.querySelector('#master')
             let statusLed = document.querySelector('#StatusLed')
             let enabledLed = document.querySelector('#EnabledLed')
@@ -143,9 +149,13 @@ const PROGMEM char wifiHtml[] = R"=====(
             if (!master.checked) {
                 edSsid.disabled = false
                 edPasswd.disabled = false
+                edApSsid.disabled = true
+                edApPasswd.disabled = true
             } else {
                 edSsid.disabled = true
                 edPasswd.disabled = true
+                edApSsid.disabled = false
+                edApPasswd.disabled = false
             }
 
             if (enabledLed.checked) {
@@ -160,27 +170,19 @@ const PROGMEM char wifiHtml[] = R"=====(
         function SaveConfigs() {
             let edSsid = document.querySelector('#ssid')
             let edPasswd = document.querySelector('#passwd')
+            let edApSsid = document.querySelector('#ap_ssid')
+            let edApPasswd = document.querySelector('#ap_passwd')
             let master = document.querySelector('#master')
             let slave = document.querySelector('#slave')
             let statusLed = document.querySelector('#StatusLed')
             let enabledLed = document.querySelector('#EnabledLed')
             let invertedLed = document.querySelector('#InvertedLed')
 
-            if (!master.checked) {
-                if ((ssid.value == '') || (passwd.value == '')) {
-                    answ.innerHTML = '<a><font color="red">Empty fields!</font></a>'
-                    return
-                } else {
-                    if ((ssid.value.length > 19) || (passwd.length > 19)) {
-                        answ.innerHTML = '<a><font color="red">SSID or Password > 19 characters</font></a>'
-                        return
-                    }
-                }
-            }
-
             fetch('/api/v1/wifi/conf?'+ new URLSearchParams({
                         ssid: edSsid.value,
                         passwd: edPasswd.value,
+                        ap_ssid: edApSsid.value,
+                        ap_passwd: edApPasswd.value,
                         ap: master.checked,
                         inverted: invertedLed.checked,
                         enabled: enabledLed.checked,

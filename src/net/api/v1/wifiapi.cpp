@@ -1,3 +1,17 @@
+/*****************************************************************************
+ *
+ * Future House Technologies
+ *
+ * Copyright (C) 2022 - Denisov Foundation Limited
+ * Written by Sergey Denisov aka LittleBuster (DenisovS21@gmail.com)
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public Licence 3
+ * as published by the Free Software Foundation; either version 3
+ * of the Licence, or (at your option) any later version.
+ *
+ *****************************************************************************/
+
 #include <functional>
 #include <ArduinoJson.h>
 #ifdef ESP32
@@ -9,12 +23,15 @@
 #include "net/html/misc.hpp"
 #include "net/html/wifi.hpp"
 #include "net/api/v1/wifiapi.hpp"
+#include "utils.hpp"
 
 WifiApi::WifiApi(const std::shared_ptr<IGpio> &gpio,
-                 const std::shared_ptr<IFlash> &flash
+                 const std::shared_ptr<IFlash> &flash,
+                 const std::shared_ptr<INetwork> &net
                  ):
     _gpio(move(gpio)),
-    _flash(move(flash))
+    _flash(move(flash)),
+    _net(move(net))
 {
 }
 
@@ -30,25 +47,17 @@ void WifiApi::wifiInfoHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
-    auto cfg = _flash->getConfigs();
 
-    doc["ssid"] = String(cfg->NetCfg.SSID);
-    doc["passwd"] = String(cfg->NetCfg.Password);
-    doc["ap"] = (!cfg->NetCfg.IsConnectAP) ? true : false;
-    doc["inverted"] = cfg->NetCfg.IsInverted;
-    doc["enabled"] = cfg->NetCfg.IsLedEnabled;
+    doc["ssid"] = _net->getSSID(NETWORK_TYPE_SSID).SSID;
+    doc["passwd"] = _net->getSSID(NETWORK_TYPE_SSID).Password;
+    doc["ap_ssid"] = _net->getSSID(NETWORK_TYPE_AP).SSID;
+    doc["ap_passwd"] = _net->getSSID(NETWORK_TYPE_AP).Password;
+    doc["ap"] = BoolToStr(_net->getStartAP());
+    doc["inverted"] = _net->getStatusLed().Inverted;
+    doc["enabled"] = _net->getStatusLed().Enabled;
+    doc["gpio"] = _gpio->pinToStr(_net->getStatusLed().Pin);
 
-    auto led = cfg->NetCfg.StatusLED;
-    auto ledPin = GpioPin
-    {
-        Type: static_cast<GpioType>(led.Type),
-        Addr: led.Addr,
-        Pin: led.Pin
-    };
-
-    doc["gpio"] = _gpio->pinToStr(ledPin);
     serializeJson(doc, out);
-
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
 }
 
@@ -56,33 +65,28 @@ void WifiApi::wifiConfHandler()
 {
     String out = "";
     DynamicJsonDocument doc(1024);
-    GpioPin ledPin;
-    auto cfg = _flash->getConfigs();
 
-    strncpy(cfg->NetCfg.SSID, _server->arg("ssid").c_str(), 19);
-    strncpy(cfg->NetCfg.Password, _server->arg("passwd").c_str(), 19);
-    if (_server->arg("ap") == "true")
-        cfg->NetCfg.IsConnectAP = false;
-    else
-        cfg->NetCfg.IsConnectAP = true;
-    if (_server->arg("inverted") == "true")
-        cfg->NetCfg.IsInverted = true;
-    else
-        cfg->NetCfg.IsInverted = false;
-    if (_server->arg("enabled") == "true")
-        cfg->NetCfg.IsLedEnabled = true;
-    else
-        cfg->NetCfg.IsLedEnabled = false;
+    _net->setSSID(NETWORK_TYPE_SSID, {
+        SSID: _server->arg("ssid"),
+        Password: _server->arg("passwd")
+    });
+    
+    _net->setSSID(NETWORK_TYPE_AP, {
+        SSID: _server->arg("ap_ssid"),
+        Password: _server->arg("ap_passwd")
+    });
 
-    ledPin = _gpio->strToPin(_server->arg("gpio"));
-    cfg->NetCfg.StatusLED.Addr = ledPin.Addr;
-    cfg->NetCfg.StatusLED.Type = ledPin.Type;
-    cfg->NetCfg.StatusLED.Pin = ledPin.Pin;
+    _net->setStatusLed({
+        Pin: _gpio->strToPin(_server->arg("gpio")),
+        Inverted: StrToBool(_server->arg("inverted")),
+        Enabled: StrToBool(_server->arg("enabled"))
+    });
 
-    if (_flash->saveData())
-        doc["result"] = true;
-    else
-        doc["result"] = false;
+    _net->setStartAP(StrToBool(_server->arg("ap")));
+
+    doc["result"] = _net->saveStates();
+    _net->loadStates();
+    _net->setup();
 
     serializeJson(doc, out);
     _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 

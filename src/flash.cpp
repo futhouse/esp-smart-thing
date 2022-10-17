@@ -27,8 +27,13 @@ void Flash::loadData()
     if (_cfg.Magic != CONFIG_MAGIC)
     {
         memset(&_cfg, 0x0, sizeof(Configs));
-        strcpy(_cfg.DevName, CONFIG_DEFAULT_SSID);
+        strncpy(_cfg.DevName, CONFIG_DEFAULT_SSID, CONFIG_STR_LEN);
+        strncpy(_cfg.NetCfg.ApSSID, CONFIG_DEFAULT_SSID, CONFIG_STR_LEN);
         _cfg.Magic = CONFIG_MAGIC;
+        _cfg.NetCfg.IsStartAP = true;
+#ifdef SECURE_MOD
+        _cfg.SecureCfg.Master = true;
+#endif
     }
 }
 
