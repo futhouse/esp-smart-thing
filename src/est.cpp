@@ -21,7 +21,8 @@ EspSmartThing::EspSmartThing(const std::shared_ptr<ILogger>& log,
                              const std::shared_ptr<IGpio>& gpio,
                              const std::shared_ptr<ISms>& sms,
                              const std::shared_ptr<ITelegram>& tg,
-                             const std::shared_ptr<ISecure>& secure
+                             const std::shared_ptr<ISecure>& secure,
+                             const std::shared_ptr<ITgBot>& tgBot
                             ):
     _log(move(log)),
     _flash(move(flash)),
@@ -30,7 +31,8 @@ EspSmartThing::EspSmartThing(const std::shared_ptr<ILogger>& log,
     _gpio(move(gpio)),
     _sms(move(sms)),
     _tg(move(tg)),
-    _secure(move(secure))
+    _secure(move(secure)),
+    _tgBot(move(tgBot))
 {
 }
 
@@ -63,10 +65,17 @@ void EspSmartThing::startApp()
     _log->info("EST", "Starting SMS module");
     _sms->loadStates();
 #endif
+
 #ifdef TELEGRAM_NOTIFY_MOD
     _log->info("EST", "Starting Telegram module");
     _tg->loadStates();
+#ifdef TELEGRAM_BOT_MOD
+    _log->info("EST", "Starting Telegram BOT module");
+    _tgBot->loadStates();
+    _tgBot->setup();
 #endif
+#endif
+
 #ifdef SECURE_MOD
     _log->info("EST", "Starting Security module");
     _secure->setup();
@@ -83,5 +92,8 @@ void EspSmartThing::loop()
     _httpSrv->loop();
 #ifdef SECURE_MOD
     _secure->loop();
+#ifdef TELEGRAM_BOT_MOD
+    _tgBot->loop();
+#endif
 #endif
 }

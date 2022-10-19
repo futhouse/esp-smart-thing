@@ -114,6 +114,7 @@ const PROGMEM char tgHtml[] = R"=====(
                         let cbBot = document.querySelector("#bot"+i);
                         let cbEnabled = document.querySelector("#en"+i);
 
+                        edChat.value = json.users[i].chatid
                         cbNotify.checked = json.users[i].notify
                         cbBot.checked = json.users[i].bot
                         cbEnabled.checked = json.users[i].enabled

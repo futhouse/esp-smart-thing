@@ -26,6 +26,7 @@
 #include "modules/core/sms.hpp"
 #include "modules/core/telegram.hpp"
 #include "modules/secure.hpp"
+#include "modules/core/tgbot.hpp"
 
 class EspSmartThing
 {
@@ -37,7 +38,8 @@ public:
                   const std::shared_ptr<IGpio>& gpio,
                   const std::shared_ptr<ISms>& sms,
                   const std::shared_ptr<ITelegram>& tg,
-                  const std::shared_ptr<ISecure>& sec
+                  const std::shared_ptr<ISecure>& sec,
+                  const std::shared_ptr<ITgBot>& tgBot
                 );
 
     /**
@@ -60,6 +62,7 @@ private:
     const std::shared_ptr<ISms> _sms;
     const std::shared_ptr<ITelegram> _tg;
     const std::shared_ptr<ISecure> _secure;
+    const std::shared_ptr<ITgBot> _tgBot;
 };
 
 #endif /* __ESP_SMART_THING_HPP__ */

@@ -76,12 +76,10 @@ bool Telegram::saveStates()
     cfg->TelegramCfg.Token[CONFIG_TG_TOKEN_LEN - 1] = '\0';
 
     for (size_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
-        setUser(i, {
-            ChatID: _users[i].ChatID,
-            Notify: _users[i].Notify,
-            Bot: _users[i].Bot,
-            Enabled: _users[i].Enabled,
-        });
+        cfg->TelegramCfg.Users[i].ChatID = _users[i].ChatID;
+        cfg->TelegramCfg.Users[i].Notify = _users[i].Notify;
+        cfg->TelegramCfg.Users[i].Bot = _users[i].Bot;
+        cfg->TelegramCfg.Users[i].Enabled = _users[i].Enabled;
     }
 
     return _flash->saveData();

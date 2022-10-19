@@ -24,10 +24,10 @@
 #include "net/api/v1/gpioapi.hpp"
 #include "net/api/v1/devapi.hpp"
 #include "est.hpp"
-
 #include "modules/core/sms.hpp"
 #include "modules/core/telegram.hpp"
 #include "modules/secure.hpp"
+#include "modules/core/tgbot.hpp"
 
 const auto logger = std::make_shared<Logger>();
 const auto flash = std::make_shared<Flash>();
@@ -44,8 +44,9 @@ const auto apiWifi = std::make_shared<WifiApi>(gpio, flash, net);
 const auto apiSms = std::make_shared<SmsApi>(sms);
 const auto apiTg = std::make_shared<TelegramApi>(tg);
 const auto apiSec = std::make_shared<SecureApi>(gpio, sec, flash);
+const auto tgBot = std::make_shared<TgBot>(logger, flash, tg, sec);
 const auto server = std::make_shared<HttpSrv>(espSrv, logger, apiGpio, apiDev, apiWifi, apiSms, apiTg, apiSec);
-const auto est = std::make_shared<EspSmartThing>(logger, flash, net, server, gpio, sms, tg, sec);
+const auto est = std::make_shared<EspSmartThing>(logger, flash, net, server, gpio, sms, tg, sec, tgBot);
 
 void setup()
 {
