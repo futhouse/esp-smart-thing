@@ -34,10 +34,10 @@ private:
     std::shared_ptr<EspServer> _server;
 
 #ifdef SMS_NOTIFY_MOD
-    void smsInfoHandler(AsyncWebServerRequest *req);
+    void smsInfoHandler(AsyncWebServerRequest *req) const;
     void smsConfHandler(AsyncWebServerRequest *req);
-    void smsTestHandler(AsyncWebServerRequest *req);
-    void smsHtmlHandler(AsyncWebServerRequest *req);
+    void smsTestHandler(AsyncWebServerRequest *req) const;
+    void smsHtmlHandler(AsyncWebServerRequest *req) const;
 #endif
 };
 

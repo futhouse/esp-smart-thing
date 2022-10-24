@@ -37,7 +37,7 @@ void WifiApi::registerHandlers(const std::shared_ptr<EspServer> &server)
     server->on("/wifi.html", HTTP_GET, std::bind(&WifiApi::wifiHandler, this, std::placeholders::_1));
 }
 
-void WifiApi::wifiInfoHandler(AsyncWebServerRequest *req)
+void WifiApi::wifiInfoHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
 
@@ -81,7 +81,7 @@ void WifiApi::wifiConfHandler(AsyncWebServerRequest *req)
     ESP.reset();
 }
 
-void WifiApi::wifiHandler(AsyncWebServerRequest *req)
+void WifiApi::wifiHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     resp.sendHtml(wifiHtml);

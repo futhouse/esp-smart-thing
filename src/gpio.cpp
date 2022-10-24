@@ -208,7 +208,7 @@ GpioState Gpio::readState(const GpioPin &pin)
     return GPIO_LOW;
 }
 
-const GpioExtender *Gpio::getExtenders()
+const GpioExtender *Gpio::getExtenders() const
 {
     if (_extFound)
         return _ext;

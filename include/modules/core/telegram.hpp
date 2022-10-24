@@ -37,12 +37,14 @@ class ITelegram : public Module
 #ifdef TELEGRAM_NOTIFY_MOD
 public:
     virtual void setToken(const String &token) = 0;
-    virtual String& getToken() = 0;
+    virtual const String& getToken() const = 0;
     virtual void setUser(size_t id, const TelegramUser &user) = 0;
-    virtual TelegramUser* getUsers() = 0;
+    virtual const TelegramUser* getUsers() const = 0;
     virtual bool sendNotify(const String &msg) = 0;
     virtual bool saveStates() = 0;
     virtual void loadStates() = 0;
+    virtual const String& getServer() const = 0;
+    virtual void setServer(const String &server) = 0;
 #endif /* TELEGRAM_NOTIFY_MOD */
 };
 
@@ -79,7 +81,7 @@ public:
      * 
      * @return String& 
      */
-    String& getToken();
+    const String& getToken() const;
 
     /**
      * @brief Add new user
@@ -93,7 +95,7 @@ public:
      * 
      * @return TelegramUser*
      */
-    TelegramUser* getUsers();
+    const TelegramUser* getUsers() const;
 
     /**
      * @brief Send Telegram Notify
@@ -104,6 +106,20 @@ public:
      */
     bool sendNotify(const String &msg);
 
+    /**
+     * @brief Get Telegram Proxy Server
+     * 
+     * @return const String& IP
+     */
+    const String& getServer() const;
+
+    /**
+     * @brief Set Telegram proxy server
+     * 
+     * @param server IP
+     */
+    void setServer(const String &server);
+
 #endif /* TELEGRAM_NOTIFY_MOD */
 private:
     const std::shared_ptr<ILogger> _log;
@@ -112,6 +128,7 @@ private:
 #ifdef TELEGRAM_NOTIFY_MOD
     TelegramUser _users[CONFIG_TG_USERS_COUNT];
     String _token;
+    String _server;
 #endif /* TELEGRAM_NOTIFY_MOD */
 };
 

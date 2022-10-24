@@ -71,6 +71,7 @@ typedef struct _TelegramUserConfig
 
 typedef struct _TelegramConfigs
 {
+    char                Server[CONFIG_STR_LEN];
     char                Token[CONFIG_TG_TOKEN_LEN];
     TelegramUserConfig  Users[CONFIG_TG_USERS_COUNT];
 } TelegramConfigs;
@@ -78,7 +79,7 @@ typedef struct _TelegramConfigs
 #ifdef TELEGRAM_BOT_MOD
 typedef struct _TgbotConfigs
 {
-    bool Status;
+    bool    Status;
 } TgbotConfigs;
 #endif
 #endif
@@ -89,8 +90,9 @@ typedef struct _TgbotConfigs
 
 typedef struct _SmsConfigs
 {
-    char Token[CONFIG_SMS_TOKEN_LEN];
-    char Phone[CONFIG_SMS_PHONE_LEN];
+    char    Server[CONFIG_STR_LEN];
+    char    Token[CONFIG_SMS_TOKEN_LEN];
+    char    Phone[CONFIG_SMS_PHONE_LEN];
 } SmsConfigs;
 #endif
 

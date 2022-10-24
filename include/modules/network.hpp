@@ -53,12 +53,12 @@ public:
     virtual void setup() = 0;
     virtual void loop() = 0;
     virtual void setSSID(NetowkSSIDType type, const NetworkSSID& ssid) = 0;
-    virtual String getIP() = 0;
-    virtual String getMAC() = 0;
-    virtual NetworkSSID& getSSID(NetowkSSIDType type) = 0;
+    virtual String getIP() const = 0;
+    virtual String getMAC() const = 0;
+    virtual const NetworkSSID& getSSID(NetowkSSIDType type) const = 0;
     virtual void setStartAP(bool status) = 0;
-    virtual bool getStartAP() = 0;
-    virtual NetworkStatusLed& getStatusLed() = 0;
+    virtual const bool getStartAP() const = 0;
+    virtual const NetworkStatusLed& getStatusLed() const = 0;
 };
 
 class Network: public INetwork
@@ -80,14 +80,14 @@ public:
      * 
      * @return IP address
      */
-    String getIP();
+    String getIP() const;
 
     /**
      * @brief Device MAC address
      * 
      * @return MAC address
      */
-    String getMAC();
+    String getMAC()  const;
 
     /**
      * @brief Loading states from EEPROM
@@ -114,7 +114,7 @@ public:
      * 
      * @return NetworkSSID&
      */
-    NetworkSSID& getSSID(NetowkSSIDType type);
+    const NetworkSSID& getSSID(NetowkSSIDType type) const;
 
     /**
      * @brief Set remote SSID name
@@ -136,7 +136,7 @@ public:
      * @return true 
      * @return false 
      */
-    bool getStartAP();
+    const bool getStartAP() const;
 
     /**
      * @brief Set the Status Led object
@@ -145,7 +145,12 @@ public:
      */
     void setStatusLed(const NetworkStatusLed& led);
 
-    NetworkStatusLed& getStatusLed();
+    /**
+     * @brief Get the Status Led configs
+     * 
+     * @return const NetworkStatusLed& 
+     */
+    const NetworkStatusLed& getStatusLed() const;
 
 private:
     const std::shared_ptr<DNSServer> _dns;

@@ -29,7 +29,7 @@ void Telegram::setToken(const String &token)
     _token = token;
 }
 
-String& Telegram::getToken()
+const String& Telegram::getToken() const
 {
     return _token;
 }
@@ -39,16 +39,28 @@ void Telegram::setUser(size_t id, const TelegramUser &usr)
     _users[id] = usr;
 }
 
-TelegramUser* Telegram::getUsers()
+const TelegramUser* Telegram::getUsers() const
 {
     return _users;
 }
 
+const String& Telegram::getServer() const
+{
+    return _server;
+}
+
+void Telegram::setServer(const String &server)
+{
+    _server = server;
+}
+
 bool Telegram::sendNotify(const String &msg)
 {
-    NetClient client(NET_CLIENT_HTTPS, "api.telegram.org");
+    NetClient client(NET_CLIENT_HTTP, _server);
 
-    NetRequest req("/bot"+ _token + "/sendMessage");
+    NetRequest req("/telegram");
+    req.setArg("token", _token);
+    req.setArg("method", "sendMessage");
     req.setArgE("text", msg);
 
     for (size_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
@@ -72,6 +84,7 @@ bool Telegram::saveStates()
 
     auto cfg = _flash->getConfigs();
 
+    strncpy(cfg->TelegramCfg.Server, _server.c_str(), CONFIG_STR_LEN);
     strncpy(cfg->TelegramCfg.Token, _token.c_str(), CONFIG_TG_TOKEN_LEN);
     cfg->TelegramCfg.Token[CONFIG_TG_TOKEN_LEN - 1] = '\0';
 
@@ -95,7 +108,10 @@ void Telegram::loadStates()
 
     auto& tgCfg = _flash->getConfigs()->TelegramCfg;
 
+    setServer(tgCfg.Server);
     setToken(tgCfg.Token);
+
+    _log->info("TELEGRAM", "Set Server: \"" + _server + "\"");
     _log->info("TELEGRAM", "Set Token: \"" + _token + "\"");
 
     for (size_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {

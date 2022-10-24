@@ -43,7 +43,7 @@ void TgBot::setStatus(bool status)
     }
 }
 
-bool TgBot::getStatus()
+const bool TgBot::getStatus() const
 {
     return _status;
 }
@@ -121,7 +121,7 @@ TgbotUser& TgBot::getUserMenu(unsigned chatId)
     return _users[0];
 }
 
-bool TgBot::checkUser(const unsigned id)
+const bool TgBot::checkUser(const unsigned id) const
 {
     for (size_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
         if (_users[i].ChatID == id) {
@@ -135,9 +135,11 @@ bool TgBot::sendMessage(unsigned chatId, const String &msg, const std::vector<St
 {
     DynamicJsonDocument doc(1024);
     String out;
-    NetClient client(NET_CLIENT_HTTPS, "api.telegram.org");
+    NetClient client(NET_CLIENT_HTTP, _tg->getServer());
 
-    NetRequest req("/bot"+ _tg->getToken() + "/sendMessage");
+    NetRequest req("/telegram");
+    req.setArg("token", _tg->getToken());
+    req.setArg("method", "sendMessage");
     req.setArg("chat_id", chatId);
     if (keybd.size() > 0) {
         for (size_t i = 0; i < keybd.size(); i++) {
@@ -151,12 +153,14 @@ bool TgBot::sendMessage(unsigned chatId, const String &msg, const std::vector<St
     return client.getRequest(req);
 }
 
-bool TgBot::getLastMsg(TgbotMessage &msg)
+const bool TgBot::getLastMsg(TgbotMessage &msg) const
 {
     DynamicJsonDocument doc(1024);
-    NetClient client(NET_CLIENT_HTTPS, "api.telegram.org");
-    
-    NetRequest req("/bot"+ _tg->getToken() + "/getUpdates");
+    NetClient client(NET_CLIENT_HTTP, _tg->getServer());
+
+    NetRequest req("/telegram");
+    req.setArg("token", _tg->getToken());
+    req.setArg("method", "getUpdates");
     req.setArg("offset", -1);
 
     if (!client.getRequest(req))

@@ -80,7 +80,7 @@ void Secure::setPin(SecurePins pinType, const GpioPin &pin)
     }
 }
 
-GpioPin& Secure::getPin(SecurePins pinType)
+const GpioPin& Secure::getPin(SecurePins pinType) const
 {
     switch (pinType)
     {
@@ -111,7 +111,7 @@ void Secure::getTypes(std::vector<String> &types)
         types.push_back(String(secureTypes[i]));
 }
 
-SecureType Secure::strToType(const String& str)
+const SecureType Secure::strToType(const String& str) const
 {
     for (uint8_t i = 0; i < SECURE_TYPES_COUNT; i++) {
         if (str == String(secureTypes[i]))
@@ -120,12 +120,12 @@ SecureType Secure::strToType(const String& str)
     return SECURE_REEDSWITCH_TYPE;
 }
 
-SecureSensor* Secure::getSensors()
+const SecureSensor* Secure::getSensors() const
 {
     return _sensors;
 }
 
-String* Secure::getKeys()
+const String* Secure::getKeys() const
 {
     return _keys;
 }
@@ -135,7 +135,7 @@ void Secure::setInvertAlarm(bool inverted)
     _invertAlarm = inverted;
 }
 
-bool Secure::getInvertAlarm(void)
+const bool Secure::getInvertAlarm(void) const
 {
     return _invertAlarm;
 }
@@ -146,7 +146,7 @@ void Secure::clearKeys()
         _keys[i] = "";
 }
 
-bool Secure::getAlarm()
+const bool Secure::getAlarm() const
 {
     return _alarm;
 }
@@ -191,12 +191,12 @@ void Secure::setAlarm(bool status)
     }
 }
 
-bool Secure::getArmed()
+const bool Secure::getArmed() const
 {
     return _armed;
 }
 
-String& Secure::getLastKey()
+const String& Secure::getLastKey() const
 {
     return _lastKey;
 }
@@ -328,12 +328,12 @@ void Secure::handleKey()
     _oneWire.reset();
 }
 
-SecureRemoteDev* Secure::getRemoteDevices()
+const SecureRemoteDev* Secure::getRemoteDevices() const
 {
     return _remote;
 }
 
-SecureRemoteDev* Secure::getLightDevices()
+const SecureRemoteDev* Secure::getLightDevices() const
 {
     return _light;
 }
@@ -361,7 +361,7 @@ bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status
     return false;
 }
 
-bool Secure::getMaster()
+const bool Secure::getMaster() const
 {
     return _master;
 }

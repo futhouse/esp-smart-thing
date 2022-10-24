@@ -81,26 +81,26 @@ public:
     virtual void setup() = 0;
     virtual void loop() = 0;
     virtual void setPin(SecurePins pinType, const GpioPin &pin) = 0;
-    virtual GpioPin& getPin(SecurePins pinType) = 0;
+    virtual const GpioPin& getPin(SecurePins pinType) const = 0;
     virtual void setArmed(bool status, bool save) = 0;
-    virtual bool getAlarm() = 0;
+    virtual const bool getAlarm() const = 0;
     virtual void setAlarm(bool status) = 0;
-    virtual bool getArmed() = 0;
-    virtual String& getLastKey() = 0;
+    virtual const bool getArmed() const = 0;
+    virtual const String& getLastKey() const = 0;
     virtual void setInvertAlarm(bool inverted) = 0;
-    virtual bool getInvertAlarm(void) = 0;
+    virtual const bool getInvertAlarm(void) const = 0;
     virtual void clearKeys() = 0;
     virtual String typeToStr(SecureType sensType) = 0;
-    virtual SecureType strToType(const String& str) = 0;
-    virtual SecureSensor* getSensors() = 0;
-    virtual String* getKeys() = 0;
+    virtual const SecureType strToType(const String& str) const = 0;
+    virtual const SecureSensor* getSensors() const = 0;
+    virtual const String* getKeys() const = 0;
     virtual void getTypes(std::vector<String> &types) = 0;
     virtual bool verifyKey(const String &key) = 0;
-    virtual SecureRemoteDev* getRemoteDevices() = 0;
-    virtual SecureRemoteDev* getLightDevices() = 0;
+    virtual const SecureRemoteDev* getRemoteDevices() const = 0;
+    virtual const SecureRemoteDev* getLightDevices() const = 0;
     virtual bool saveStates() = 0;
     virtual void loadStates() = 0;
-    virtual bool getMaster() = 0;
+    virtual const bool getMaster() const = 0;
     virtual void setMaster(bool master) = 0;
     virtual void setKey(size_t id, const String &key) = 0;
     virtual void setSensor(size_t id, const SecureSensor &sens) = 0;
@@ -144,7 +144,7 @@ public:
      * 
      * @param pinType
      */
-    GpioPin& getPin(SecurePins pinType);
+    const GpioPin& getPin(SecurePins pinType) const;
 
     /**
      * @brief Set the Armed status
@@ -159,7 +159,7 @@ public:
      * @return true 
      * @return false 
      */
-    bool getAlarm();
+    const bool getAlarm() const;
 
     /**
      * @brief Set the Alarm status
@@ -175,14 +175,14 @@ public:
      * @return true 
      * @return false 
      */
-    bool getArmed();
+    const bool getArmed() const;
 
     /**
      * @brief Get the Last detected Key
      * 
      * @return String Key
      */
-    String& getLastKey();
+    const String& getLastKey() const;
 
     /**
      * @brief Get the Types of security sensor
@@ -202,7 +202,7 @@ public:
      * @brief Get the Invert Alarm status
      * 
      */
-    bool getInvertAlarm(void);
+    const bool getInvertAlarm(void) const;
 
     /**
      * @brief Remove all keys
@@ -224,21 +224,21 @@ public:
      * @param str 
      * @return SecureType 
      */
-    SecureType strToType(const String& str);
+    const SecureType strToType(const String& str) const;
 
     /**
      * @brief Get the Sensors object
      * 
      * @return SecureSensor*
      */
-    SecureSensor* getSensors();
+    const SecureSensor* getSensors() const;
 
     /**
      * @brief Get the Keys object
      * 
      * @return String*
      */
-    String* getKeys();
+    const String* getKeys() const;
 
     /**
      * @brief Verify key
@@ -252,14 +252,14 @@ public:
      * 
      * @return SecureRemoteDev*
      */
-    SecureRemoteDev* getRemoteDevices();
+    const SecureRemoteDev* getRemoteDevices() const;
 
     /**
      * @brief Get the Light Devices modules
      * 
      * @return SecureRemoteDev*
      */
-    SecureRemoteDev* getLightDevices();
+    const SecureRemoteDev* getLightDevices() const;
 
     /**
      * @brief Get master status of module
@@ -267,7 +267,7 @@ public:
      * @return true 
      * @return false 
      */
-    bool getMaster();
+    const bool getMaster() const;
     
     /**
      * @brief Set master status of module

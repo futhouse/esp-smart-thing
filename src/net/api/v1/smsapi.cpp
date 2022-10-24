@@ -36,12 +36,13 @@ void SmsApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 
 #ifdef SMS_NOTIFY_MOD
 
-void SmsApi::smsInfoHandler(AsyncWebServerRequest *req)
+void SmsApi::smsInfoHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
 
     resp.setArg("token", _sms->getToken());
     resp.setArg("phone", _sms->getPhone());
+    resp.setArg("server", _sms->getServer());
     
     resp.sendJson();
 }
@@ -51,28 +52,24 @@ void SmsApi::smsConfHandler(AsyncWebServerRequest *req)
     NetResponse resp(req);
 
     _sms->setCreds(req->arg("token"), req->arg("phone"));
-    
+    _sms->setServer(req->arg("server"));
     resp.setArg("result", _sms->saveStates());
     _sms->loadStates();
 
     resp.sendJson();
 }
 
-void SmsApi::smsTestHandler(AsyncWebServerRequest *req)
+void SmsApi::smsTestHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
-
     resp.setArg("result", _sms->sendMsg("Test notify!"));
-    
     resp.sendJson();
 }
 
-void SmsApi::smsHtmlHandler(AsyncWebServerRequest *req)
+void SmsApi::smsHtmlHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
-
     resp.setArg("result", _sms->sendMsg("Test notify!"));
-    
     resp.sendHtml(smsHtml);
 }
 

@@ -48,7 +48,7 @@ void SecureApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 
 #ifdef SECURE_MOD
 
-void SecureApi::secInfoHandler(AsyncWebServerRequest *req)
+void SecureApi::secInfoHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req, 3096);
 
@@ -92,7 +92,7 @@ void SecureApi::secInfoHandler(AsyncWebServerRequest *req)
     resp.sendJson();
 }
 
-void SecureApi::secTypesHandler(AsyncWebServerRequest *req)
+void SecureApi::secTypesHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     std::vector<String> types;
@@ -161,7 +161,7 @@ void SecureApi::secConfHandler(AsyncWebServerRequest *req)
     resp.sendJson();
 }
 
-void SecureApi::secVerifyHandler(AsyncWebServerRequest *req)
+void SecureApi::secVerifyHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
 
@@ -190,7 +190,7 @@ void SecureApi::secAlarmHandler(AsyncWebServerRequest *req)
     resp.sendJson();
 }
 
-void SecureApi::secHtmlHandler(AsyncWebServerRequest *req)
+void SecureApi::secHtmlHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     resp.sendHtml(secHtml);

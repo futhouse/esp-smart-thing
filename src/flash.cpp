@@ -48,7 +48,7 @@ Configs* Flash::getConfigs()
     return &_cfg;
 }
 
-size_t Flash::getConfigSize()
+size_t Flash::getConfigSize() const
 {
     return sizeof(_cfg);
 }

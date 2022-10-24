@@ -159,7 +159,7 @@ public:
     virtual void setPinMode(const GpioPin &pin, const GpioMode mode);
     virtual void setPinState(const GpioPin &pin, const GpioState state);
     virtual GpioState readState(const GpioPin &pin);
-    virtual const GpioExtender *getExtenders() = 0;
+    virtual const GpioExtender *getExtenders() const = 0;
     virtual GpioPin strToPin(const String &str) = 0;
     virtual String pinToStr(const GpioPin &pin) = 0;
     virtual void getGpioNames(std::vector<String> &names) = 0;
@@ -206,7 +206,7 @@ public:
      * 
      * @return const GpioExtender* 
      */
-    const GpioExtender *getExtenders();
+    const GpioExtender *getExtenders() const;
 
     /**
      * @brief Convert String name of GPIO to GpioPin

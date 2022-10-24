@@ -30,9 +30,9 @@ void Sms::setCreds(const String &token, const String &phone)
 
 bool Sms::sendMsg(const String &msg)
 {
-    NetClient client(NET_CLIENT_HTTPS, "sms.ru");
+    NetClient client(NET_CLIENT_HTTPS, _server);
 
-    NetRequest req("/sms/send");
+    NetRequest req("/sms");
     req.setArg("api_id", _token);
     req.setArg("to", _phone);
     req.setArgE("msg", msg);
@@ -40,14 +40,24 @@ bool Sms::sendMsg(const String &msg)
     return client.getRequest(req);
 }
 
-const String& Sms::getPhone()
+const String& Sms::getPhone() const
 {
     return _phone;
 }
 
-const String& Sms::getToken()
+const String& Sms::getToken() const
 {
     return _token;
+}
+
+void Sms::setServer(const String &server)
+{
+    _server = server;
+}
+
+const String& Sms::getServer() const
+{
+    return _server;
 }
 
 #endif /* SMS_NOTIFY_MOD */
@@ -57,6 +67,7 @@ bool Sms::saveStates()
 #ifdef SMS_NOTIFY_MOD
     auto cfg = _flash->getConfigs();
 
+    strncpy(cfg->SmsCfg.Server, _server.c_str(), CONFIG_STR_LEN);
     strncpy(cfg->SmsCfg.Token, _token.c_str(), CONFIG_SMS_TOKEN_LEN);
     strncpy(cfg->SmsCfg.Phone, _phone.c_str(), CONFIG_SMS_PHONE_LEN);
 
@@ -71,5 +82,6 @@ void Sms::loadStates()
 #ifdef SMS_NOTIFY_MOD
     auto cfg = _flash->getConfigs();
     setCreds(cfg->SmsCfg.Token, cfg->SmsCfg.Phone);
+    setServer(cfg->SmsCfg.Server);
 #endif
 }

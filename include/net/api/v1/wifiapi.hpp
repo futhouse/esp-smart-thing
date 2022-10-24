@@ -39,8 +39,8 @@ private:
     std::shared_ptr<EspServer> _server;
     const std::shared_ptr<INetwork> _net;
 
-    void wifiInfoHandler(AsyncWebServerRequest *req);
-    void wifiHandler(AsyncWebServerRequest *req);
+    void wifiInfoHandler(AsyncWebServerRequest *req) const;
+    void wifiHandler(AsyncWebServerRequest *req) const;
     void wifiConfHandler(AsyncWebServerRequest *req);
 };
 

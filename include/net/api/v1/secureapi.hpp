@@ -40,11 +40,11 @@ private:
     std::shared_ptr<EspServer> _server;
 
 #ifdef SECURE_MOD
-    void secInfoHandler(AsyncWebServerRequest *req);
+    void secInfoHandler(AsyncWebServerRequest *req) const;
     void secConfHandler(AsyncWebServerRequest *req);
-    void secTypesHandler(AsyncWebServerRequest *req);
-    void secHtmlHandler(AsyncWebServerRequest *req);
-    void secVerifyHandler(AsyncWebServerRequest *req);
+    void secTypesHandler(AsyncWebServerRequest *req) const;
+    void secHtmlHandler(AsyncWebServerRequest *req) const;
+    void secVerifyHandler(AsyncWebServerRequest *req) const;
     void secArmHandler(AsyncWebServerRequest *req);
     void secAlarmHandler(AsyncWebServerRequest *req);
     void secClearKeysHandler(AsyncWebServerRequest *req);

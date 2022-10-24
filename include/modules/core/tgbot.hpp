@@ -61,7 +61,7 @@ class ITgBot : public Module
 #ifdef TELEGRAM_BOT_MOD
 public:
     virtual void setStatus(bool status) = 0;
-    virtual bool getStatus() = 0;
+    virtual const bool getStatus() const = 0;
     virtual void setup() = 0;
     virtual void loop() = 0;
 #endif /* TELEGRAM_BOT_MOD */
@@ -104,10 +104,18 @@ public:
      * @return true 
      * @return false 
      */
-    bool getStatus();
+    const bool getStatus() const;
 
+    /**
+     * @brief Startup configuration
+     * 
+     */
     void setup();
 
+    /**
+     * @brief Main loop cycle
+     * 
+     */
     void loop();
 
 #endif /* TELEGRAM_BOT_MOD */
@@ -124,8 +132,8 @@ private:
     String _lastMsg;
 
     void handleMain();
-    bool getLastMsg(TgbotMessage &msg);
-    bool checkUser(const unsigned id);
+    const bool getLastMsg(TgbotMessage &msg) const;
+    const bool checkUser(const unsigned id) const;
     TgbotUser& getUserMenu(unsigned chatId);
     bool sendMessage(unsigned chatId, const String &msg, const std::vector<String> &keybd);
 #endif /* TELEGRAM_BOT_MOD */

@@ -34,13 +34,13 @@ void DeviceApi::registerHandlers(const std::shared_ptr<EspServer> &server)
     _server->on("/", HTTP_GET, std::bind(&DeviceApi::devHtmlHandler, this, std::placeholders::_1));
 }
 
-void DeviceApi::devHtmlHandler(AsyncWebServerRequest *req)
+void DeviceApi::devHtmlHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     resp.sendHtml(infoHtml);
 }
 
-void DeviceApi::devInfoHandler(AsyncWebServerRequest *req)
+void DeviceApi::devInfoHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     auto cfg = _flash->getConfigs();

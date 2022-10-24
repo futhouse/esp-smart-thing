@@ -104,7 +104,7 @@ void Network::loop()
     }
 }
 
-String Network::getIP()
+String Network::getIP() const
 {
     if (_startAP)
         return WiFi.softAPIP().toString();
@@ -112,7 +112,7 @@ String Network::getIP()
         return WiFi.localIP().toString();
 }
 
-String Network::getMAC()
+String Network::getMAC() const
 {
     return WiFi.macAddress();
 }
@@ -190,7 +190,7 @@ void Network::setup()
     }
 }
 
-NetworkSSID& Network::getSSID(NetowkSSIDType type)
+const NetworkSSID& Network::getSSID(NetowkSSIDType type) const
 {
     return _ssid[type];
 }
@@ -205,12 +205,12 @@ void Network::setStartAP(bool status)
     _startAP = status;
 }
 
-bool Network::getStartAP()
+const bool Network::getStartAP() const
 {
     return _startAP;
 }
 
-NetworkStatusLed& Network::getStatusLed()
+const NetworkStatusLed& Network::getStatusLed() const
 {
     return _statusLed;
 }

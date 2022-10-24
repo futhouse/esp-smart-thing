@@ -37,10 +37,11 @@ void TelegramApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 
 #ifdef TELEGRAM_NOTIFY_MOD
 
-void TelegramApi::tgInfoHandler(AsyncWebServerRequest *req)
+void TelegramApi::tgInfoHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     
+    resp.setArg("server", _tg->getServer());
     resp.setArg("token", _tg->getToken());
 
     auto users = _tg->getUsers();
@@ -60,6 +61,7 @@ void TelegramApi::tgConfHandler(AsyncWebServerRequest *req)
     DynamicJsonDocument json(1024);
 
     _tg->setToken(req->arg("token"));
+    _tg->setServer(req->arg("server"));
 
     deserializeJson(json, req->arg("users"));
     for (uint8_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
@@ -77,16 +79,14 @@ void TelegramApi::tgConfHandler(AsyncWebServerRequest *req)
     resp.sendJson();
 }
 
-void TelegramApi::tgTestHandler(AsyncWebServerRequest *req)
+void TelegramApi::tgTestHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
-
     resp.setArg("result", _tg->sendNotify("Test notify!"));
-
     resp.sendJson();
 }
 
-void TelegramApi::tgHtmlHandler(AsyncWebServerRequest *req)
+void TelegramApi::tgHtmlHandler(AsyncWebServerRequest *req) const
 {
     NetResponse resp(req);
     resp.sendHtml(tgHtml);

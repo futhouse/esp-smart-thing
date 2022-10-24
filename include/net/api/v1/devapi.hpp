@@ -36,9 +36,9 @@ private:
     const std::shared_ptr<INetwork> _net;
     std::shared_ptr<EspServer> _server;
 
-    void devInfoHandler(AsyncWebServerRequest *req);
+    void devInfoHandler(AsyncWebServerRequest *req) const;
     void devConfHandler(AsyncWebServerRequest *req);
-    void devHtmlHandler(AsyncWebServerRequest *req);
+    void devHtmlHandler(AsyncWebServerRequest *req) const;
 };
 
 #endif /* __DEV_API_HPP__ */

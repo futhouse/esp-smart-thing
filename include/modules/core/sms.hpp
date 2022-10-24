@@ -28,9 +28,11 @@ class ISms : public Module
 #ifdef SMS_NOTIFY_MOD
 public:
     virtual void setCreds(const String &token, const String &phone) = 0;
-    virtual const String &getPhone() = 0;
-    virtual const String &getToken() = 0;
+    virtual const String &getPhone() const = 0;
+    virtual const String &getToken() const = 0;
     virtual bool sendMsg(const String &msg) = 0;
+    virtual void setServer(const String &server) = 0;
+    virtual const String &getServer() const = 0;
 #endif /* SMS_NOTIFY_MOD */
 };
 
@@ -67,14 +69,14 @@ public:
      * 
      * @return const String& 
      */
-    const String &getPhone();
+    const String &getPhone() const;
 
     /**
      * @brief Get the Token string
      * 
      * @return const String& 
      */
-    const String &getToken();
+    const String &getToken() const;
 
     /**
      * @brief Send SMS message
@@ -84,12 +86,27 @@ public:
      * @return false 
      */
     bool sendMsg(const String &msg);
+
+    /**
+     * @brief Set SMS proxy server
+     * 
+     * @param server IP
+     */
+    void setServer(const String &server);
+
+    /**
+     * @brief Get SMS proxy server
+     * 
+     * @return const String& 
+     */
+    const String &getServer() const;
 #endif /* SMS_NOTIFY_MOD */
 
 private:
     const std::shared_ptr<IFlash> _flash;
 
 #ifdef SMS_NOTIFY_MOD
+    String _server;
     String _phone;
     String _token;
 #endif /* SMS_NOTIFY_MOD */

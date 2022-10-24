@@ -28,7 +28,7 @@ public:
     virtual bool saveData() = 0;
     virtual void loadData() = 0;
     virtual Configs* getConfigs() = 0;
-    virtual size_t getConfigSize() = 0;
+    virtual size_t getConfigSize() const = 0;
 };
 
 class Flash: public IFlash
@@ -66,7 +66,7 @@ public:
      * 
      * @return size_t 
      */
-    size_t getConfigSize();
+    size_t getConfigSize() const;
 
 private:
     Configs _cfg;

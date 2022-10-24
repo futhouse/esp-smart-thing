@@ -29,7 +29,7 @@ void GpioApi::registerHandlers(const std::shared_ptr<EspServer> &server)
     _server->on(API_GPIO_INFO, HTTP_GET, std::bind(&GpioApi::gpioInfoHandler, this, std::placeholders::_1));
 }
 
-void GpioApi::gpioInfoHandler(AsyncWebServerRequest *req)
+void GpioApi::gpioInfoHandler(AsyncWebServerRequest *req) const
 {
     std::vector<String> gpios;
     NetResponse resp(req);
