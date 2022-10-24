@@ -1,14 +1,22 @@
+/*****************************************************************************
+ *
+ * Future House Technologies
+ *
+ * Copyright (C) 2022 - Denisov Foundation Limited
+ * Written by Sergey Denisov aka LittleBuster (DenisovS21@gmail.com)
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public Licence 3
+ * as published by the Free Software Foundation; either version 3
+ * of the Licence, or (at your option) any later version.
+ *
+ *****************************************************************************/
+
 #include <functional>
-#include <ArduinoJson.h>
-#ifdef ESP32
-#include <HttpClient.h>
-#elif defined(ESP8266)
-#include <ESP8266HttpClient.h>
-#endif /* ESP8266 */
 
 #include "net/api/v1/gpioapi.hpp"
-#include "net/html/misc.hpp"
 #include "net/html/info.hpp"
+#include "net/response.hpp"
 
 GpioApi::GpioApi(const std::shared_ptr<IGpio> &gpio):
     _gpio(move(gpio))
@@ -18,20 +26,18 @@ GpioApi::GpioApi(const std::shared_ptr<IGpio> &gpio):
 void GpioApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
     _server = server;
-    _server->on(API_GPIO_INFO, std::bind(&GpioApi::gpioInfoHandler, this));
+    _server->on(API_GPIO_INFO, HTTP_GET, std::bind(&GpioApi::gpioInfoHandler, this, std::placeholders::_1));
 }
 
-void GpioApi::gpioInfoHandler()
+void GpioApi::gpioInfoHandler(AsyncWebServerRequest *req)
 {
-    String out;
     std::vector<String> gpios;
-    DynamicJsonDocument doc(2048);
+    NetResponse resp(req);
 
     _gpio->getGpioNames(gpios);
-    for (uint8_t i = 0; i < gpios.size(); i++)
-        doc[i] = gpios[i];
+    for (size_t i = 0; i < gpios.size(); i++) {
+        resp.setArg(i, gpios[i]);
+    }
 
-    serializeJson(doc, out);
-
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.sendJson();
 }

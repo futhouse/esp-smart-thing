@@ -39,10 +39,10 @@ private:
     std::shared_ptr<EspServer> _server;
 
 #ifdef TELEGRAM_NOTIFY_MOD
-    void tgInfoHandler();
-    void tgConfHandler();
-    void tgTestHandler();
-    void tgHtmlHandler();
+    void tgInfoHandler(AsyncWebServerRequest *req);
+    void tgConfHandler(AsyncWebServerRequest *req);
+    void tgTestHandler(AsyncWebServerRequest *req);
+    void tgHtmlHandler(AsyncWebServerRequest *req);
 #endif
 };
 

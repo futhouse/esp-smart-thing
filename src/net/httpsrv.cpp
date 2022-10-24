@@ -12,8 +12,8 @@
  *
  *****************************************************************************/
 
-#include <ArduinoJson.h>
 #include <functional>
+
 #ifdef ESP32
 #include <HttpClient.h>
 #elif defined (ESP8266)
@@ -22,7 +22,6 @@
 
 #include "net/httpsrv.hpp"
 #include "net/html/404.hpp"
-#include "net/html/misc.hpp"
 #include "net/html/wifi.hpp"
 #include "net/html/info.hpp"
 
@@ -53,7 +52,7 @@ void HttpSrv::setup()
 {
     _log->info("HTTP", "Starting WEB server");
     
-    _syncSrv->onNotFound(std::bind(&HttpSrv::notFoundHandler, this));
+    _syncSrv->onNotFound(std::bind(&HttpSrv::notFoundHandler, this, std::placeholders::_1));
     
     _apiDev->registerHandlers(_syncSrv);
     _apiGpio->registerHandlers(_syncSrv);
@@ -67,11 +66,10 @@ void HttpSrv::setup()
 
 void HttpSrv::loop()
 {
-    _syncSrv->handleClient();
 }
 
-void HttpSrv::notFoundHandler()
+void HttpSrv::notFoundHandler(AsyncWebServerRequest *req)
 {
-    _syncSrv->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, notFoundHtml); 
+    req->send(HTTP_CODE_OK, HTTP_CONTENT_HTML, notFoundHtml); 
 }
 

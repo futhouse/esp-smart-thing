@@ -13,14 +13,8 @@
  *****************************************************************************/
 
 #include <functional>
-#include <ArduinoJson.h>
-#ifdef ESP32
-#include <HttpClient.h>
-#elif defined(ESP8266)
-#include <ESP8266HttpClient.h>
-#endif /* ESP8266 */
 
-#include "net/html/misc.hpp"
+#include "net/response.hpp"
 #include "net/html/wifi.hpp"
 #include "net/api/v1/wifiapi.hpp"
 #include "utils.hpp"
@@ -38,63 +32,57 @@ WifiApi::WifiApi(const std::shared_ptr<IGpio> &gpio,
 void WifiApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
     _server = server;
-    _server->on("/wifi.html", std::bind(&WifiApi::wifiHandler, this));
-    _server->on(API_WIFI_INFO, std::bind(&WifiApi::wifiInfoHandler, this));
-    _server->on(API_WIFI_CONF, std::bind(&WifiApi::wifiConfHandler, this));
+    server->on(API_WIFI_CONF, HTTP_POST, std::bind(&WifiApi::wifiConfHandler, this, std::placeholders::_1));
+    server->on(API_WIFI_INFO, HTTP_GET, std::bind(&WifiApi::wifiInfoHandler, this, std::placeholders::_1));
+    server->on("/wifi.html", HTTP_GET, std::bind(&WifiApi::wifiHandler, this, std::placeholders::_1));
 }
 
-void WifiApi::wifiInfoHandler()
+void WifiApi::wifiInfoHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
 
-    doc["ssid"] = _net->getSSID(NETWORK_TYPE_SSID).SSID;
-    doc["passwd"] = _net->getSSID(NETWORK_TYPE_SSID).Password;
-    doc["ap_ssid"] = _net->getSSID(NETWORK_TYPE_AP).SSID;
-    doc["ap_passwd"] = _net->getSSID(NETWORK_TYPE_AP).Password;
-    doc["ap"] = BoolToStr(_net->getStartAP());
-    doc["inverted"] = _net->getStatusLed().Inverted;
-    doc["enabled"] = _net->getStatusLed().Enabled;
-    doc["gpio"] = _gpio->pinToStr(_net->getStatusLed().Pin);
+    resp.setArg("ssid", _net->getSSID(NETWORK_TYPE_SSID).SSID);
+    resp.setArg("passwd", _net->getSSID(NETWORK_TYPE_SSID).Password);
+    resp.setArg("ap_ssid", _net->getSSID(NETWORK_TYPE_AP).SSID);
+    resp.setArg("ap_passwd", _net->getSSID(NETWORK_TYPE_AP).Password);
+    resp.setArg("ap", _net->getStartAP());
+    resp.setArg("inverted", _net->getStatusLed().Inverted);
+    resp.setArg("enabled", _net->getStatusLed().Enabled);
+    resp.setArg("gpio", _gpio->pinToStr(_net->getStatusLed().Pin));
 
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.sendJson();
 }
 
-void WifiApi::wifiConfHandler()
+void WifiApi::wifiConfHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
 
     _net->setSSID(NETWORK_TYPE_SSID, {
-        SSID: _server->arg("ssid"),
-        Password: _server->arg("passwd")
+        SSID: req->arg("ssid"),
+        Password: req->arg("passwd")
     });
     
     _net->setSSID(NETWORK_TYPE_AP, {
-        SSID: _server->arg("ap_ssid"),
-        Password: _server->arg("ap_passwd")
+        SSID: req->arg("ap_ssid"),
+        Password: req->arg("ap_passwd")
     });
 
     _net->setStatusLed({
-        Pin: _gpio->strToPin(_server->arg("gpio")),
-        Inverted: StrToBool(_server->arg("inverted")),
-        Enabled: StrToBool(_server->arg("enabled"))
+        Pin: _gpio->strToPin(req->arg("gpio")),
+        Inverted: StrToBool(req->arg("inverted")),
+        Enabled: StrToBool(req->arg("enabled"))
     });
 
-    _net->setStartAP(StrToBool(_server->arg("ap")));
+    _net->setStartAP(StrToBool(req->arg("ap")));
 
-    doc["result"] = _net->saveStates();
-    _net->loadStates();
-    _net->setup();
+    resp.setArg("result", _net->saveStates());
+    resp.sendJson();
 
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    ESP.reset();
 }
 
-void WifiApi::wifiHandler()
+void WifiApi::wifiHandler(AsyncWebServerRequest *req)
 {
-    _server->sendContent_P(headerHtml);
-    _server->sendContent_P(wifiHtml);
-    _server->sendContent_P(footerHtml);
+    NetResponse resp(req);
+    resp.sendHtml(wifiHtml);
 }

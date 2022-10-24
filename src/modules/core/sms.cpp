@@ -62,7 +62,7 @@ bool Sms::saveStates()
 
     return _flash->saveData();
 #else
-    return false
+    return false;
 #endif
 }
 

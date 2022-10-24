@@ -21,7 +21,9 @@
 
 #ifdef SECURE_MOD
 
-const PROGMEM char secHtml[] = R"=====(
+const PROGMEM char secHtml[] =
+    #include "net/html/header.hpp"
+    R"=====(
     <body>
         <center>
             <table border='0' cellpadding='4' cellspacing='0'>
@@ -384,21 +386,21 @@ const PROGMEM char secHtml[] = R"=====(
                     cbInverted.checked = json.inverted;
                     for (let i = 0; i < gpioLED.children.length; i++) {
                         let item = gpioLED.children[i]
-                        if (item.value == json.pins.led) {
+                        if (item.value == json.pin_led) {
                             item.selected = true
                             break
                         }
                     }
                     for (let i = 0; i < gpioKey.children.length; i++) {
                         let item = gpioKey.children[i]
-                        if (item.value == json.pins.key) {
+                        if (item.value == json.pin_key) {
                             item.selected = true
                             break
                         }
                     }
                     for (let i = 0; i < gpioAlarm.children.length; i++) {
                         let item = gpioAlarm.children[i]
-                        if (item.value == json.pins.alarm) {
+                        if (item.value == json.pin_alarm) {
                             item.selected = true
                             break
                         }
@@ -406,6 +408,27 @@ const PROGMEM char secHtml[] = R"=====(
                     for (let i = 0; i < json.keys.length; i++) {
                         let edKey = document.querySelector("#key"+i);
                         edKey.value = json.keys[i]
+                    }
+                    for (let i = 0; i < json.remote.length; i++) {
+                        let edName = document.querySelector("#rmip"+i);
+                        let cbEnable = document.querySelector("#rmen"+i);
+
+                        edName.value = json.remote[i].ip
+                        cbEnable.checked = json.remote[i].enabled
+                    }
+                    for (let i = 0; i < json.light.length; i++) {
+                        let edName = document.querySelector("#rmlip"+i);
+                        let cbEnable = document.querySelector("#rmlen"+i);
+
+                        edName.value = json.light[i].ip
+                        cbEnable.checked = json.light[i].enabled
+                    }
+                    if (json.master) {
+                        cbMaster.checked = true
+                        cbSlave.checked = false
+                    } else {
+                        cbMaster.checked = false
+                        cbSlave.checked = true
                     }
                     for (let i = 0; i < json.sensors.length; i++) {
                         let edName = document.querySelector("#name"+i);
@@ -436,27 +459,6 @@ const PROGMEM char secHtml[] = R"=====(
                                 break
                             }
                         }
-                    }
-                    for (let i = 0; i < json.remote.length; i++) {
-                        let edName = document.querySelector("#rmip"+i);
-                        let cbEnable = document.querySelector("#rmen"+i);
-
-                        edName.value = json.remote[i].ip
-                        cbEnable.checked = json.remote[i].enabled
-                    }
-                    for (let i = 0; i < json.light.length; i++) {
-                        let edName = document.querySelector("#rmlip"+i);
-                        let cbEnable = document.querySelector("#rmlen"+i);
-
-                        edName.value = json.light[i].ip
-                        cbEnable.checked = json.light[i].enabled
-                    }
-                    if (json.master) {
-                        cbMaster.checked = true
-                        cbSlave.checked = false
-                    } else {
-                        cbMaster.checked = false
-                        cbSlave.checked = true
                     }
                     DisableElements()
                 })
@@ -577,35 +579,39 @@ const PROGMEM char secHtml[] = R"=====(
 
             let data = {
                 "inverted": cbInverted.checked,
-                "pins": {
-                    "alarm": gpioAlarm.value,
-                    "key": gpioKey.value,
-                    "led": gpioLED.value
-                },
-                "sensors": sensors,
-                "remote": remote,
-                "light": light,
+                "pin_alarm": gpioAlarm.value,
+                "pin_key": gpioKey.value,
+                "pin_led": gpioLED.value,
                 "master": cbMaster.checked,
-                "keys": keys
+                "keys": JSON.stringify(keys),
+                "sensors": JSON.stringify(sensors),
+                "remote": JSON.stringify(remote),
+                "light": JSON.stringify(light)
             }
 
             fetch("/api/v1/secure/conf", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: JSON.stringify(data)
+                body: new URLSearchParams(data)
             }).then(function(resp) {
                 return resp.json();
             }).then(function(json) {
-                if (json.result)
+                if (json.result) {
                     answ.innerHTML = '<a><font color="green">Confirmed</font></a>'
-                else
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                }
+                else {
                     answ.innerHTML = '<a><font color="red">Failed</font></a>'
+                }
             })
         }
     </script>
-    )=====";
+    )====="
+    #include "net/html/footer.hpp"
 
 #endif /* SECURE_MOD */
 

@@ -1,14 +1,22 @@
-#include <functional>
-#include <ArduinoJson.h>
-#ifdef ESP32
-#include <HttpClient.h>
-#elif defined(ESP8266)
-#include <ESP8266HttpClient.h>
-#endif /* ESP8266 */
+/*****************************************************************************
+ *
+ * Future House Technologies
+ *
+ * Copyright (C) 2022 - Denisov Foundation Limited
+ * Written by Sergey Denisov aka LittleBuster (DenisovS21@gmail.com)
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public Licence 3
+ * as published by the Free Software Foundation; either version 3
+ * of the Licence, or (at your option) any later version.
+ *
+ *****************************************************************************/
 
+#include <functional>
+
+#include "net/response.hpp"
 #include "net/api/v1/tgapi.hpp"
 #include "net/html/modules/core/telegram.hpp"
-#include "net/html/misc.hpp"
 
 TelegramApi::TelegramApi(const std::shared_ptr<ITelegram>& tg
                         ):
@@ -20,75 +28,68 @@ void TelegramApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
 #ifdef TELEGRAM_NOTIFY_MOD
     _server = server;
-    _server->on(API_TELEGRAM_INFO, std::bind(&TelegramApi::tgInfoHandler, this));
-    _server->on(API_TELEGRAM_CONF, std::bind(&TelegramApi::tgConfHandler, this));
-    _server->on(API_TELEGRAM_TEST, std::bind(&TelegramApi::tgTestHandler, this));
-    _server->on("/telegram.html", std::bind(&TelegramApi::tgHtmlHandler, this));
+    _server->on(API_TELEGRAM_INFO, std::bind(&TelegramApi::tgInfoHandler, this, std::placeholders::_1));
+    _server->on(API_TELEGRAM_CONF, std::bind(&TelegramApi::tgConfHandler, this, std::placeholders::_1));
+    _server->on(API_TELEGRAM_TEST, std::bind(&TelegramApi::tgTestHandler, this, std::placeholders::_1));
+    _server->on("/telegram.html", std::bind(&TelegramApi::tgHtmlHandler, this, std::placeholders::_1));
 #endif
 }
 
 #ifdef TELEGRAM_NOTIFY_MOD
 
-void TelegramApi::tgInfoHandler()
+void TelegramApi::tgInfoHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
     
-    doc["token"] = _tg->getToken();
+    resp.setArg("token", _tg->getToken());
 
     auto users = _tg->getUsers();
     for (uint8_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
-        doc["users"][i]["chatid"] = users[i].ChatID;
-        doc["users"][i]["notify"] = users[i].Notify;
-        doc["users"][i]["bot"] = users[i].Bot;
-        doc["users"][i]["enabled"] = users[i].Enabled;
+        resp.setArg("users", i, "chatid", users[i].ChatID);
+        resp.setArg("users", i, "notify", users[i].Notify);
+        resp.setArg("users", i, "bot", users[i].Bot);
+        resp.setArg("users", i, "enabled", users[i].Enabled);
     }
-
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    
+    resp.sendJson();
 }
 
-void TelegramApi::tgConfHandler()
+void TelegramApi::tgConfHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024), doco(1024);
-    deserializeJson(doc, _server->arg(0));
+    NetResponse resp(req);
+    DynamicJsonDocument json(1024);
 
-    _tg->setToken(doc["token"]);
+    _tg->setToken(req->arg("token"));
 
-    auto users = static_cast<JsonArray>(doc["users"]);
-    for (uint8_t i = 0; i < users.size(); i++) {
+    deserializeJson(json, req->arg("users"));
+    for (uint8_t i = 0; i < CONFIG_TG_USERS_COUNT; i++) {
         _tg->setUser(i, {
-            ChatID: static_cast<unsigned>(users[i]["chatid"]),
-            Notify: static_cast<bool>(users[i]["notify"]),
-            Bot: static_cast<bool>(users[i]["bot"]),
-            Enabled: static_cast<bool>(users[i]["enabled"])
+            ChatID: static_cast<unsigned>(json[i]["chatid"]),
+            Notify: static_cast<bool>(json[i]["notify"]),
+            Bot: static_cast<bool>(json[i]["bot"]),
+            Enabled: static_cast<bool>(json[i]["enabled"])
         });
     }
 
-    doco["result"] = _tg->saveStates();
+    resp.setArg("result", _tg->saveStates());
     _tg->loadStates();
-
-    serializeJson(doco, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    
+    resp.sendJson();
 }
 
-void TelegramApi::tgTestHandler()
+void TelegramApi::tgTestHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
 
-    doc["result"] = _tg->sendNotify("Test notify!");
+    resp.setArg("result", _tg->sendNotify("Test notify!"));
 
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.sendJson();
 }
 
-void TelegramApi::tgHtmlHandler()
+void TelegramApi::tgHtmlHandler(AsyncWebServerRequest *req)
 {
-    _server->sendContent_P(headerHtml);
-    _server->sendContent_P(tgHtml);
-    _server->sendContent_P(footerHtml);
+    NetResponse resp(req);
+    resp.sendHtml(tgHtml);
 }
 
 #endif /* TELEGRAM_NOTIFY_MOD */

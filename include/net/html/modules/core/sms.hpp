@@ -21,7 +21,9 @@
 
 #ifdef SMS_NOTIFY_MOD
 
-const PROGMEM char smsHtml[] = R"=====(
+const PROGMEM char smsHtml[] =
+    #include "net/html/header.hpp"
+    R"=====(
     <body>
         <center>
             <table border='0' cellpadding='4' cellspacing='0'>
@@ -85,20 +87,34 @@ const PROGMEM char smsHtml[] = R"=====(
                 return
             }
 
-            fetch('/api/v1/sms/conf?'+ new URLSearchParams({
-                        token: edToken.value,
-                        phone: edPhone.value,
-                    })).then(function(resp) {
+            let data = {
+                "token": edToken.value,
+                "phone": edPhone.value,
+            }
+
+            fetch("/api/v1/sms/conf", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams(data)
+            }).then(function(resp) {
                 return resp.json();
             }).then(function(json) {
-                if (json.result)
+                if (json.result) {
                     answ.innerHTML = '<a><font color="green">Confirmed</font></a>'
-                else
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                }
+                else {
                     answ.innerHTML = '<a><font color="red">Failed</font></a>'
+                }
             })
         }
     </script>
-    )=====";
+    )====="
+    #include "net/html/footer.hpp"
 
 #endif /* SMS_NOTIFY_MOD */
 

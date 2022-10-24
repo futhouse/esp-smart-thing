@@ -21,7 +21,9 @@
 
 #ifdef TELEGRAM_NOTIFY_MOD
 
-const PROGMEM char tgHtml[] = R"=====(
+const PROGMEM char tgHtml[] = 
+    #include "net/html/header.hpp"
+    R"=====(
     <body>
         <center>
             <table border='0' cellpadding='4' cellspacing='0'>
@@ -168,26 +170,32 @@ const PROGMEM char tgHtml[] = R"=====(
 
             let data = {
                 "token": edToken.value,
-                "users": users,
+                "users": JSON.stringify(users),
             }
 
             fetch("/api/v1/telegram/conf", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: JSON.stringify(data)
+                body: new URLSearchParams(data)
             }).then(function(resp) {
                 return resp.json();
             }).then(function(json) {
-                if (json.result)
+                if (json.result) {
                     answ.innerHTML = '<a><font color="green">Confirmed</font></a>'
-                else
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                }
+                else {
                     answ.innerHTML = '<a><font color="red">Failed</font></a>'
+                }
             })
         }
     </script>
-    )=====";
+    )====="
+    #include "net/html/footer.hpp"
 
 #endif /* TELEGRAM_NOTIFY_MOD */
 

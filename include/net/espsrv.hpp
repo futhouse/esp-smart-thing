@@ -15,6 +15,15 @@
 #ifndef __ESP_SRV_HPP__
 #define __ESP_SRV_HPP__
 
+#ifdef ESP32
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+#endif
+#include "ESPAsyncWebServer.h"
+
 #define CONFIG_WEB_SERVER_PORT  80
 
 #define HTTP_CONTENT_HTML   "text/html"
@@ -30,12 +39,11 @@ public:
 };
 
 #elif defined(ESP8266)
-#include <ESP8266WebServer.h>
 
-class EspServer: public ESP8266WebServer
+class EspServer: public AsyncWebServer
 {
 public:
-    EspServer() : ESP8266WebServer(CONFIG_WEB_SERVER_PORT) { }
+    EspServer() : AsyncWebServer(CONFIG_WEB_SERVER_PORT) { }
 };
 
 #endif /* ESP8266 */

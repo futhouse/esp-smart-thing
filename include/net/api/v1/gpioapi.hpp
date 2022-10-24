@@ -33,7 +33,7 @@ private:
     const std::shared_ptr<IGpio> _gpio;
     std::shared_ptr<EspServer> _server;
 
-    void gpioInfoHandler();
+    void gpioInfoHandler(AsyncWebServerRequest *req);
 };
 
 #endif /* __GPIO_API_HPP__ */

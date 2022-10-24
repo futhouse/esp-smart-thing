@@ -17,7 +17,9 @@
 
 #include <Arduino.h>
 
-const PROGMEM char infoHtml[] = R"=====(
+const PROGMEM char infoHtml[] =
+    #include "net/html/header.hpp"
+    R"=====(
     <body>
             <center>
                 <table border='0' cellpadding='4' cellspacing='0'>
@@ -26,22 +28,22 @@ const PROGMEM char infoHtml[] = R"=====(
                     </tr>
                     <tr>
                         <td align='right'><a>Device Name:</a></td>
-                        <td align='left'><b><font color="blue"><a id='devName'></a></font></b></td>
+                        <td align='left'><font color='blue'><b><a id='aDevName'></a></b></font></td>
                     </tr>
                     <tr>
                         <td align='right'><a>IP address:</a></td>
-                        <td align='left'><b><font color="blue"><a id='devIP'></a></font></b></td>
+                        <td align='left'><font color='blue'><b><a id='aDevIP'></a></b></font></td>
                     </tr>
                     <tr>
                         <td align='right'><a>MAC address:</a></td>
-                        <td align='left'><b><font color="blue"><a id='devMAC'></a></font></b></td>
+                        <td align='left'><font color='blue'><b><a id='aDevMac'></a></b></font></td>
                     </tr>
                     <tr align='center'>
                         <td colspan='2' align='center'><font color='#800080'><h2>Device Name</h2></font></td>
                     </tr>
                     <tr align='center'>
                         <td align='right'><a>Name:</a></td>
-                        <td align='left'><font color='blue'><input type='edit' id='EditName' /></font></td>
+                        <td align='left'><font color='blue'><input type='edit' id='edName' /></font></td>
                     </tr>
                     <tr align='center'>
                         <td colspan='2'>
@@ -57,18 +59,13 @@ const PROGMEM char infoHtml[] = R"=====(
         </body>
         <script>
             function UpdateFields() {
-                let devName = document.querySelector('#devName')
-                let edName = document.querySelector('#EditName')
-                let devIP = document.querySelector('#devIP')
-                let devMAC = document.querySelector('#devMAC')
-
                 fetch('/api/v1/device/info').then(function(resp) {
                         return resp.json();
                     }).then(function(json) {
                         edName.value = json.name
-                        devName.innerHTML = json.name
-                        devIP.innerHTML = json.ip
-                        devMAC.innerHTML = json.mac
+                        aDevName.innerHTML = json.name
+                        aDevIP.innerHTML = json.ip
+                        aDevMac.innerHTML = json.mac
                     })
             }
 
@@ -77,17 +74,32 @@ const PROGMEM char infoHtml[] = R"=====(
             }
 
             function SetNewName() {
-                let edName = document.querySelector('#EditName')
+                let data = {
+                    "name": edName.value
+                }
 
-                fetch('/api/v1/device/conf?' + new URLSearchParams({
-                        name: edName.value,
-                    })).then(function(resp) {
-                        return resp.json();
-                    }).then(function(json) {
-                        window.location.reload()
-                    })
+                fetch("/api/v1/device/conf", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams(data)
+                }).then(function(resp) {
+                    return resp.json();
+                }).then(function(json) {
+                    if (json.result) {
+                        answ.innerHTML = '<a><font color="green">Confirmed</font></a>'
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    }
+                    else {
+                        answ.innerHTML = '<a><font color="red">Failed</font></a>'
+                    }
+                })
             }
         </script>
-    )=====";
+    )====="
+    #include "net/html/footer.hpp"
 
 #endif /* __INFO_HTML_HPP__ */

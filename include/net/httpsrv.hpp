@@ -69,7 +69,7 @@ private:
     const std::shared_ptr<IApi> _apiTg;
     const std::shared_ptr<IApi> _apiSec;
 
-    void notFoundHandler();
+    void notFoundHandler(AsyncWebServerRequest *req);
 };
 
 #endif /* __HTTP_SRV_HPP__ */

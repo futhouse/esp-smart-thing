@@ -16,8 +16,11 @@
 #define __WIFI_HTML_HPP__
 
 #include <Arduino.h>
+#include "custom/modules.hpp"
 
-const PROGMEM char wifiHtml[] = R"=====(
+const PROGMEM char wifiHtml[] =
+    #include "net/html/header.hpp"
+    R"=====(
     <body>
         <center>
             <table border='0' cellpadding='4' cellspacing='0'>
@@ -27,10 +30,10 @@ const PROGMEM char wifiHtml[] = R"=====(
                 <tr align='center'>
                     <td colspan='2'>
                         <form action=''>
-                            <input onclick="DisableElements()" type='radio' id='master' name='wifi' checked='checked'>
-                            <label for='master'>Start new AP</label>
-                            <input onclick="DisableElements()" type='radio' id='slave' name='wifi'>
-                            <label for='slave'>Connect to AP</label>
+                            <input onclick="DisableElements()" type='radio' id='rbMaster' name='wifi'>
+                            <label for='rbMaster'>Start new AP</label>
+                            <input onclick="DisableElements()" type='radio' id='rbSlave' name='wifi'>
+                            <label for='rbSlave'>Connect to AP</label>
                         </form>
                     </td>
                 </tr>
@@ -39,38 +42,38 @@ const PROGMEM char wifiHtml[] = R"=====(
                 </tr>
                 <tr align='center'>
                     <td align='right'><a>SSID:</a></td>
-                    <td align='left'><input type='edit' id='ap_ssid' /></td>
+                    <td align='left'><input type='edit' id='edApSsid' /></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'>Password:</td>
-                    <td align='left'><input type='password' id='ap_passwd' /></td>
+                    <td align='left'><input type='password' id='edApPasswd' /></td>
                 </tr>
                 <tr>
                     <td colspan='2' align='center'><font color='#800080'><h2>Connect to AP</h2></font></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'><a>SSID:</a></td>
-                    <td align='left'><input type='edit' id='ssid' /></td>
+                    <td align='left'><input type='edit' id='edSsid' /></td>
                 </tr>
                 <tr align='center'>
                     <td align='right'>Password:</td>
-                    <td align='left'><input type='password' id='passwd' /></td>
+                    <td align='left'><input type='password' id='edPasswd' /></td>
                 </tr>
                 <tr>
                     <td colspan='2' align='center'><font color='#800080'><h2>Status LED</h2></font></td>
                 </tr>
                 <tr>
                     <td colspan='2' align='center'>
-                        <input onclick='DisableElements()' type='checkbox' id='EnabledLed' />
-                        <label for='EnabledLed'>Enabled</label>
+                        <input onclick='DisableElements()' type='checkbox' id='cbEnabled' />
+                        <label for='cbEnabled'>Enabled</label>
                     </td>
                 </tr>
                 <tr align='center'>
                     <td>
-                        <input type='checkbox' id='InvertedLed' />
-                        <label for='StatusLed'>Inverted LED</label>
+                        <input type='checkbox' id='cbInverted' />
+                        <label for='cmbStatusLed'>Inverted LED</label>
                     </td>
-                    <td align='right'><select id='StatusLed'></select></td>
+                    <td align='right'><select id='cmbStatusLed'></select></td>
                 </tr>
                 <tr align='center'>
                     <td colspan='2'>
@@ -86,16 +89,6 @@ const PROGMEM char wifiHtml[] = R"=====(
     </body>
     <script>
         window.onload = async function() {
-            let ssid = document.querySelector('#ssid')
-            let passwd = document.querySelector('#passwd')
-            let ap_ssid = document.querySelector('#ap_ssid')
-            let ap_passwd = document.querySelector('#ap_passwd')
-            let master = document.querySelector('#master')
-            let slave = document.querySelector('#slave')
-            let statusLed = document.querySelector('#StatusLed')
-            let enabledLed = document.querySelector('#EnabledLed')
-            let invertedLed = document.querySelector('#InvertedLed')
-
             await fetch('/api/v1/gpio/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
@@ -103,29 +96,29 @@ const PROGMEM char wifiHtml[] = R"=====(
                         let option = document.createElement("option")
                         option.value = json[i]
                         option.text = json[i]
-                        statusLed.add(option)
+                        cmbStatusLed.add(option)
                     }
                 })
 
             await fetch('/api/v1/wifi/info').then(function(resp) {
                     return resp.json();
                 }).then(function(json) {
-                    ssid.value = json.ssid
-                    passwd.value = json.passwd
-                    ap_ssid.value = json.ap_ssid
-                    ap_passwd.value = json.ap_passwd
+                    edSsid.value = json.ssid
+                    edPasswd.value = json.passwd
+                    edApSsid.value = json.ap_ssid
+                    edApPasswd.value = json.ap_passwd
                     if (json.ap) {
-                        master.checked = false
-                        slave.checked = true
+                        rbMaster.checked = true
+                        rbSlave.checked = false
                     } else {
-                        master.checked = true
-                        slave.checked = false
+                        rbMaster.checked = false
+                        rbSlave.checked = true
                     }
-                    invertedLed.checked = json.inverted
-                    enabledLed.checked = json.enabled
+                    cbInverted.checked = json.inverted
+                    cbEnabled.checked = json.enabled
 
-                    for (let i = 0; i < statusLed.children.length; i++) {
-                        let item = statusLed.children[i]
+                    for (let i = 0; i < cmbStatusLed.children.length; i++) {
+                        let item = cmbStatusLed.children[i]
                         if (item.value == json.gpio) {
                             item.selected = true
                             break
@@ -137,16 +130,7 @@ const PROGMEM char wifiHtml[] = R"=====(
         };
 
         function DisableElements() {
-            let edSsid = document.querySelector('#ssid')
-            let edPasswd = document.querySelector('#passwd')
-            let edApSsid = document.querySelector('#ap_ssid')
-            let edApPasswd = document.querySelector('#ap_passwd')
-            let master = document.querySelector('#master')
-            let statusLed = document.querySelector('#StatusLed')
-            let enabledLed = document.querySelector('#EnabledLed')
-            let invertedLed = document.querySelector('#InvertedLed')
-            
-            if (!master.checked) {
+            if (!rbMaster.checked) {
                 edSsid.disabled = false
                 edPasswd.disabled = false
                 edApSsid.disabled = true
@@ -158,42 +142,49 @@ const PROGMEM char wifiHtml[] = R"=====(
                 edApPasswd.disabled = false
             }
 
-            if (enabledLed.checked) {
-                statusLed.disabled = false
-                invertedLed.disabled = false
+            if (cbEnabled.checked) {
+                cmbStatusLed.disabled = false
+                cbInverted.disabled = false
             } else {
-                statusLed.disabled = true
-                invertedLed.disabled = true
+                cmbStatusLed.disabled = true
+                cbInverted.disabled = true
             }
         }
 
         function SaveConfigs() {
-            let edSsid = document.querySelector('#ssid')
-            let edPasswd = document.querySelector('#passwd')
-            let edApSsid = document.querySelector('#ap_ssid')
-            let edApPasswd = document.querySelector('#ap_passwd')
-            let master = document.querySelector('#master')
-            let slave = document.querySelector('#slave')
-            let statusLed = document.querySelector('#StatusLed')
-            let enabledLed = document.querySelector('#EnabledLed')
-            let invertedLed = document.querySelector('#InvertedLed')
+            let data = {
+                "ssid": edSsid.value,
+                "passwd": edPasswd.value,
+                "ap_ssid": edApSsid.value,
+                "ap_passwd": edApPasswd.value,
+                "ap": rbMaster.checked,
+                "inverted": cbInverted.checked,
+                "enabled": cbEnabled.checked,
+                "gpio": cmbStatusLed.value
+            }
 
-            fetch('/api/v1/wifi/conf?'+ new URLSearchParams({
-                        ssid: edSsid.value,
-                        passwd: edPasswd.value,
-                        ap_ssid: edApSsid.value,
-                        ap_passwd: edApPasswd.value,
-                        ap: master.checked,
-                        inverted: invertedLed.checked,
-                        enabled: enabledLed.checked,
-                        gpio: statusLed.value,
-                    })).then(function(resp) {
+            fetch("/api/v1/wifi/conf", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams(data)
+            }).then(function(resp) {
                 return resp.json();
             }).then(function(json) {
-                answ.innerHTML = '<a><font color="green">Confirmed</font></a>'
+                if (json.result) {
+                    answ.innerHTML = '<a><font color="green">Confirmed</font></a>'
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                }
+                else {
+                    answ.innerHTML = '<a><font color="red">Failed</font></a>'
+                }
             })
         }
     </script>
-    )=====";
+    )====="
+    #include "net/html/footer.hpp"
 
 #endif /* __WIFI_HTML_HPP__ */

@@ -38,8 +38,10 @@ Secure::Secure(const std::shared_ptr<ILogger>& log,
     _sms(move(sms)),
     _flash(move(flash))
 {
+#ifdef SECURE_MOD
     for (uint8_t i = 0; i < CONFIG_SECURE_KEYS_COUNT; i++)
         _keys[i] = "";
+#endif
 }
 
 #ifdef SECURE_MOD
@@ -326,8 +328,75 @@ void Secure::handleKey()
     _oneWire.reset();
 }
 
+SecureRemoteDev* Secure::getRemoteDevices()
+{
+    return _remote;
+}
+
+SecureRemoteDev* Secure::getLightDevices()
+{
+    return _light;
+}
+
+bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status)
+{
+    NetClient client(NET_CLIENT_HTTP, ip);
+
+    if (cmd == SECURE_REMOTE_ARM_CMD) {
+        NetRequest req(API_SECURE_ARM);
+        req.setArg("status", BoolToStr(status));
+        return client.getRequest(req);
+    }
+    else if (cmd == SECURE_REMOTE_ALARM_CMD) {
+        NetRequest req(API_SECURE_ALARM);
+        req.setArg("status", BoolToStr(status));
+        return client.getRequest(req);
+    }
+    else if (cmd == SECURE_REMOTE_LIGHT_ON_CMD) {
+        NetRequest req(API_LIGHT_ALL);
+        req.setArg("status", BoolToStr(status));
+        return client.getRequest(req);
+    }
+
+    return false;
+}
+
+bool Secure::getMaster()
+{
+    return _master;
+}
+
+void Secure::setMaster(bool master)
+{
+    _master = master;
+}
+
+void Secure::setKey(size_t id, const String &key)
+{
+    _keys[id] = key;
+}
+
+void Secure::setSensor(size_t id, const SecureSensor &sens)
+{
+    _sensors[id] = sens;
+}
+
+void Secure::setRemote(size_t id, const SecureRemoteDev &dev)
+{
+    _remote[id] = dev;
+}
+
+void Secure::setLight(size_t id, const SecureRemoteDev &dev)
+{
+    _light[id] = dev;
+}
+
+#endif /* SECURE_MOD */
+
+
 bool Secure::saveStates()
 {
+#ifdef SECURE_MOD
     _log->info("SECURE", "Saving Security configs");
 
     auto cfg = _flash->getConfigs();
@@ -388,10 +457,14 @@ bool Secure::saveStates()
     cfg->SecureCfg.Master = getMaster();
 
     return _flash->saveData();
+#else
+    return false;
+#endif
 }
 
 void Secure::loadStates()
 {
+#ifdef SECURE_MOD
     _log->info("SECURE", "Loading Security configs");
 
     auto& secCfg = _flash->getConfigs()->SecureCfg;
@@ -477,69 +550,5 @@ void Secure::loadStates()
         
     setArmed(secCfg.Armed);
     setAlarm(secCfg.Alarm);
+#endif
 }
-
-SecureRemoteDev* Secure::getRemoteDevices()
-{
-    return _remote;
-}
-
-SecureRemoteDev* Secure::getLightDevices()
-{
-    return _light;
-}
-
-bool Secure::sendRemoteStatus(SecureRemoteCmd cmd, const String &ip, bool status)
-{
-    NetClient client(NET_CLIENT_HTTP, ip);
-
-    if (cmd == SECURE_REMOTE_ARM_CMD) {
-        NetRequest req(API_SECURE_ARM);
-        req.setArg("status", BoolToStr(status));
-        return client.getRequest(req);
-    }
-    else if (cmd == SECURE_REMOTE_ALARM_CMD) {
-        NetRequest req(API_SECURE_ALARM);
-        req.setArg("status", BoolToStr(status));
-        return client.getRequest(req);
-    }
-    else if (cmd == SECURE_REMOTE_LIGHT_ON_CMD) {
-        NetRequest req(API_LIGHT_ALL);
-        req.setArg("status", BoolToStr(status));
-        return client.getRequest(req);
-    }
-
-    return false;
-}
-
-bool Secure::getMaster()
-{
-    return _master;
-}
-
-void Secure::setMaster(bool master)
-{
-    _master = master;
-}
-
-void Secure::setKey(size_t id, const String &key)
-{
-    _keys[id] = key;
-}
-
-void Secure::setSensor(size_t id, const SecureSensor &sens)
-{
-    _sensors[id] = sens;
-}
-
-void Secure::setRemote(size_t id, const SecureRemoteDev &dev)
-{
-    _remote[id] = dev;
-}
-
-void Secure::setLight(size_t id, const SecureRemoteDev &dev)
-{
-    _light[id] = dev;
-}
-
-#endif /* SECURE_MOD */

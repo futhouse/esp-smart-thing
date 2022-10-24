@@ -38,15 +38,16 @@ private:
     const std::shared_ptr<ISecure> _secure;
     const std::shared_ptr<IFlash> _flash;
     std::shared_ptr<EspServer> _server;
+
 #ifdef SECURE_MOD
-    void secInfoHandler();
-    void secConfHandler();
-    void secTypesHandler();
-    void secHtmlHandler();
-    void secVerifyHandler();
-    void secArmHandler();
-    void secAlarmHandler();
-    void secClearKeysHandler();
+    void secInfoHandler(AsyncWebServerRequest *req);
+    void secConfHandler(AsyncWebServerRequest *req);
+    void secTypesHandler(AsyncWebServerRequest *req);
+    void secHtmlHandler(AsyncWebServerRequest *req);
+    void secVerifyHandler(AsyncWebServerRequest *req);
+    void secArmHandler(AsyncWebServerRequest *req);
+    void secAlarmHandler(AsyncWebServerRequest *req);
+    void secClearKeysHandler(AsyncWebServerRequest *req);
 #endif
 };
 

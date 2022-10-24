@@ -1,14 +1,22 @@
-#include <functional>
-#include <ArduinoJson.h>
-#ifdef ESP32
-#include <HttpClient.h>
-#elif defined(ESP8266)
-#include <ESP8266HttpClient.h>
-#endif /* ESP8266 */
+/*****************************************************************************
+ *
+ * Future House Technologies
+ *
+ * Copyright (C) 2022 - Denisov Foundation Limited
+ * Written by Sergey Denisov aka LittleBuster (DenisovS21@gmail.com)
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public Licence 3
+ * as published by the Free Software Foundation; either version 3
+ * of the Licence, or (at your option) any later version.
+ *
+ *****************************************************************************/
 
+#include <functional>
+
+#include "net/response.hpp"
 #include "net/api/v1/smsapi.hpp"
 #include "net/html/modules/core/sms.hpp"
-#include "net/html/misc.hpp"
 
 SmsApi::SmsApi(const std::shared_ptr<ISms>& sms):
     _sms(move(sms))
@@ -17,59 +25,55 @@ SmsApi::SmsApi(const std::shared_ptr<ISms>& sms):
 
 void SmsApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
-#ifdef SMS_NOTIFY_MOD
     _server = server;
-    _server->on(API_SMS_INFO, std::bind(&SmsApi::smsInfoHandler, this));
-    _server->on(API_SMS_CONF, std::bind(&SmsApi::smsConfHandler, this));
-    _server->on(API_SMS_TEST, std::bind(&SmsApi::smsTestHandler, this));
-    _server->on("/sms.html", std::bind(&SmsApi::smsHtmlHandler, this));
+#ifdef SMS_NOTIFY_MOD
+    _server->on(API_SMS_CONF, HTTP_POST, std::bind(&SmsApi::smsConfHandler, this, std::placeholders::_1));
+    _server->on(API_SMS_INFO, HTTP_GET, std::bind(&SmsApi::smsInfoHandler, this, std::placeholders::_1));
+    _server->on(API_SMS_TEST, HTTP_GET, std::bind(&SmsApi::smsTestHandler, this, std::placeholders::_1));
+    _server->on("/sms.html", std::bind(&SmsApi::smsHtmlHandler, this, std::placeholders::_1));
 #endif
 }
 
 #ifdef SMS_NOTIFY_MOD
 
-void SmsApi::smsInfoHandler()
+void SmsApi::smsInfoHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
 
-    doc["token"] = _sms->getToken();
-    doc["phone"] = _sms->getPhone();
-
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.setArg("token", _sms->getToken());
+    resp.setArg("phone", _sms->getPhone());
+    
+    resp.sendJson();
 }
 
-void SmsApi::smsConfHandler()
+void SmsApi::smsConfHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
 
-    _sms->setCreds(_server->arg("token"),  _server->arg("phone"));
+    _sms->setCreds(req->arg("token"), req->arg("phone"));
     
-    doc["result"] = _sms->saveStates();
+    resp.setArg("result", _sms->saveStates());
     _sms->loadStates();
 
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.sendJson();
 }
 
-void SmsApi::smsTestHandler()
+void SmsApi::smsTestHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
 
-    doc["result"] = _sms->sendMsg("Test notify!");
-
-    serializeJson(doc, out);
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.setArg("result", _sms->sendMsg("Test notify!"));
+    
+    resp.sendJson();
 }
 
-void SmsApi::smsHtmlHandler()
+void SmsApi::smsHtmlHandler(AsyncWebServerRequest *req)
 {
-    _server->sendContent_P(headerHtml);
-    _server->sendContent_P(smsHtml);
-    _server->sendContent_P(footerHtml);
+    NetResponse resp(req);
+
+    resp.setArg("result", _sms->sendMsg("Test notify!"));
+    
+    resp.sendHtml(smsHtml);
 }
 
 #endif /* SMS_NOTIFY_MOD */

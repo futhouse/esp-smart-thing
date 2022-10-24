@@ -241,20 +241,6 @@ public:
     String* getKeys();
 
     /**
-     * @brief Save states to EEPROM
-     * 
-     * @return true 
-     * @return false 
-     */
-    bool saveStates();
-
-    /**
-     * @brief Loading states from EEPROM
-     * 
-     */
-    void loadStates();
-
-    /**
      * @brief Verify key
      * 
      * @param key 
@@ -323,6 +309,20 @@ public:
     void setLight(size_t id, const SecureRemoteDev &dev);
 
 #endif /* SECURE_MOD */
+
+    /**
+     * @brief Save states to EEPROM
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool saveStates();
+
+    /**
+     * @brief Loading states from EEPROM
+     * 
+     */
+    void loadStates();
 private:
     const std::shared_ptr<ILogger> _log;
     const std::shared_ptr<IGpio> _gpio;

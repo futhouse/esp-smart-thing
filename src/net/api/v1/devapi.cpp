@@ -1,15 +1,23 @@
+/*****************************************************************************
+ *
+ * Future House Technologies
+ *
+ * Copyright (C) 2022 - Denisov Foundation Limited
+ * Written by Sergey Denisov aka LittleBuster (DenisovS21@gmail.com)
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public Licence 3
+ * as published by the Free Software Foundation; either version 3
+ * of the Licence, or (at your option) any later version.
+ *
+ *****************************************************************************/
+
 #include <functional>
-#include <ArduinoJson.h>
-#ifdef ESP32
-#include <HttpClient.h>
-#elif defined(ESP8266)
-#include <ESP8266HttpClient.h>
-#endif /* ESP8266 */
 
 #include "net/api/v1/devapi.hpp"
-#include "net/html/misc.hpp"
 #include "net/html/info.hpp"
 #include "net/api/api.hpp"
+#include "net/response.hpp"
 
 DeviceApi::DeviceApi(const std::shared_ptr<IFlash>& flash,
                      const std::shared_ptr<INetwork>& net):
@@ -21,42 +29,37 @@ DeviceApi::DeviceApi(const std::shared_ptr<IFlash>& flash,
 void DeviceApi::registerHandlers(const std::shared_ptr<EspServer> &server)
 {
     _server = server;
-    _server->on(API_DEV_INFO, std::bind(&DeviceApi::devInfoHandler, this));
-    _server->on(API_DEV_CONF, std::bind(&DeviceApi::devConfHandler, this));
-    _server->on("/", std::bind(&DeviceApi::devHtmlHandler, this));
+    _server->on(API_DEV_CONF, HTTP_POST, std::bind(&DeviceApi::devConfHandler, this, std::placeholders::_1));
+    _server->on(API_DEV_INFO, HTTP_GET, std::bind(&DeviceApi::devInfoHandler, this, std::placeholders::_1));
+    _server->on("/", HTTP_GET, std::bind(&DeviceApi::devHtmlHandler, this, std::placeholders::_1));
 }
 
-void DeviceApi::devHtmlHandler()
+void DeviceApi::devHtmlHandler(AsyncWebServerRequest *req)
 {
-    _server->sendContent_P(headerHtml);
-    _server->sendContent_P(infoHtml);
-    _server->sendContent_P(footerHtml);
+    NetResponse resp(req);
+    resp.sendHtml(infoHtml);
 }
 
-void DeviceApi::devInfoHandler()
+void DeviceApi::devInfoHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
     auto cfg = _flash->getConfigs();
 
-    doc["name"] = String(cfg->DevName);
-    doc["ip"] = _net->getIP();
-    doc["mac"] = _net->getMAC();
-    serializeJson(doc, out);
+    resp.setArg("name", String(cfg->DevName));
+    resp.setArg("ip", _net->getIP());
+    resp.setArg("mac", _net->getMAC());
 
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.sendJson();
 }
 
-void DeviceApi::devConfHandler()
+void DeviceApi::devConfHandler(AsyncWebServerRequest *req)
 {
-    String out = "";
-    DynamicJsonDocument doc(1024);
+    NetResponse resp(req);
     auto cfg = _flash->getConfigs();
-    
-    strncpy(cfg->DevName, _server->arg("name").c_str(), CONFIG_STR_LEN);
+
+    strncpy(cfg->DevName, req->arg("name").c_str(), CONFIG_STR_LEN);
     cfg->DevName[CONFIG_STR_LEN - 1] = '\0';
 
-    doc["result"] = _flash->saveData();
-
-    _server->send(HTTP_CODE_OK, HTTP_CONTENT_JSON, out); 
+    resp.setArg("result", _flash->saveData());
+    resp.sendJson();
 }

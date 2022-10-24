@@ -119,6 +119,8 @@ String Network::getMAC()
 
 void Network::loadStates()
 {
+    _log->info("NET", "Loading Wi-Fi configs");
+
     auto cfg = _flash->getConfigs();
     const auto& led = cfg->NetCfg.StatusLED;
 
@@ -142,6 +144,7 @@ void Network::loadStates()
 
 bool Network::saveStates()
 {
+    _log->info("NET", "Saving Wi-Fi configs");
     auto cfg = _flash->getConfigs();
 
     strncpy(cfg->NetCfg.SSID, _ssid[NETWORK_TYPE_SSID].SSID.c_str(), CONFIG_STR_LEN);

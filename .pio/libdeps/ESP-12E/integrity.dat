@@ -1,9 +1,9 @@
-OneWire
-plageoj/UrlEncode@^1.0.0
-SPI
-sumotoy/gpio_expander@^0.8.3
 sstaub/Ticker@^4.4.0
-me-no-dev/ESP Async WebServer@^1.2.3
-bblanchon/ArduinoJson@^6.19.4
 me-no-dev/ESPAsyncTCP@^1.2.2
+sumotoy/gpio_expander@^0.8.3
+OneWire
+SPI
+bblanchon/ArduinoJson@^6.19.4
+plageoj/UrlEncode@^1.0.0
+me-no-dev/ESP Async WebServer@^1.2.3
 Wire
